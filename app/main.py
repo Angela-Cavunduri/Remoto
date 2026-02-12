@@ -9,6 +9,7 @@ from app.models.review import Review
 from app.models.servico import Servico
 from app.models.transfer import Transfer
 from app.models.user_sigle import UserSigle
+from app.routes import auth, usuario
 
 
 
@@ -17,7 +18,8 @@ app = FastAPI(
     description="Backend do sistema Troca Fácil",
     version="1.0.0"
 )
-app.include_router(usuario_router)
+app.include_router(usuario.router)
+app.include_router(auth.router)
 
 @app.get("/")
 def root():
