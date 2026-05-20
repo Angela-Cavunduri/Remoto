@@ -8,5 +8,6 @@ python-jose[cryptography]
 stripe
 python-multipart
 alembic
-pydantic
+pydantic[email]
 requests
+email-validator
