@@ -40,7 +40,7 @@ from app.models.transfer import Transfer
 from app.models.exchangeOffer import ExchangeOffer
 from app.models.servico import Servico
 from app.models.category import Category
-
+from app.models.paymentExchange import PaymentExchange
 # -------------------------------------------------
 # Metadata usada pelo Alembic
 # -------------------------------------------------

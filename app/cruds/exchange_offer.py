@@ -1,0 +1,177 @@
+from fastapi import HTTPException, BackgroundTasks
+from sqlalchemy.orm import Session
+from app.models.exchangeOffer import ExchangeOffer
+from app.models.servico import Servico
+from app.models.user import Usuario
+from app.cruds.message import send_email
+from datetime import datetime
+
+
+
+def create_exchange_offer(
+    db: Session,
+    id_servico_oferecido: int,
+    id_servico_desejado: int,
+    user_id: int,
+    mensagem: str = None,
+    background_tasks: BackgroundTasks = None
+):
+    # 1. Verificar se o utilizador está ativo
+    user = db.query(Usuario).filter(Usuario.id_usuario == user_id).first()
+    if not user or not user.is_active:
+        raise HTTPException(403, "A sua conta está desativada por não cumprimento das regras da plataforma.")
+
+    # 2. Verificar limitações do plano Freemium
+    if user.plano != "premium":
+        inicio_dia = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        # Conta todas as propostas de troca criadas por este utilizador hoje (independentemente do status)
+        trocas_hoje = db.query(ExchangeOffer).filter(
+            ExchangeOffer.id_usuario_solicitante == user_id,
+            ExchangeOffer.data_criacao >= inicio_dia
+        ).count()
+        if trocas_hoje >= 2:
+            raise HTTPException(
+                status_code=403,
+                detail="Limite de 2 propostas de troca por dia atingido para o plano Free. Faça upgrade para Premium para propor trocas ilimitadas!"
+            )
+
+    # 3. Verificar se o utilizador tem trocas pendentes ou aceites que ainda não foram concluídas
+    troca_ativa = db.query(ExchangeOffer).filter(
+        (ExchangeOffer.id_usuario_solicitante == user_id) | (ExchangeOffer.id_user == user_id),
+        ExchangeOffer.status == "aceita"
+    ).first()
+
+    if troca_ativa:
+        raise HTTPException(400, "Já tem uma troca em andamento. Termine-a antes de iniciar uma nova.")
+
+    if id_servico_oferecido == id_servico_desejado:
+        raise HTTPException(400, "Não pode trocar o mesmo serviço")
+
+    servico_oferecido = db.query(Servico).filter(
+        Servico.id_servico == id_servico_oferecido
+    ).first()
+
+    servico_desejado = db.query(Servico).filter(
+        Servico.id_servico == id_servico_desejado
+    ).first()
+
+    if not servico_oferecido or not servico_desejado:
+        raise HTTPException(404, "Serviço não encontrado")
+
+    if servico_oferecido.id_user != user_id:
+        raise HTTPException(403, "Você só pode oferecer seus próprios serviços")
+
+    nova_oferta = ExchangeOffer(
+        id_user=servico_desejado.id_user,  # dono do serviço desejado
+        id_servico_oferecido=id_servico_oferecido,
+        id_servico_desejado=id_servico_desejado,
+        id_usuario_solicitante=user_id,
+        mensagem=mensagem
+    )
+
+    db.add(nova_oferta)
+    db.commit()
+    db.refresh(nova_oferta)
+
+    if background_tasks:
+        dono_servico = db.query(Usuario).filter(Usuario.id_usuario == nova_oferta.id_user).first()
+        solicitante = db.query(Usuario).filter(Usuario.id_usuario == user_id).first()
+        
+        if dono_servico and solicitante:
+            assunto = "Nova solicitação de troca - Troca Fácil!"
+            corpo_email = f"Olá {dono_servico.nome},\n\nVocê recebeu uma solicitação de troca de {solicitante.nome} para o seu serviço!\n\nAcesse no aplicativo para ver a oferta e responder no chat.\n\nEquipe Troca Fácil"
+            background_tasks.add_task(send_email, dono_servico.email, assunto, corpo_email)
+
+    return nova_oferta
+
+
+def aceitar_oferta(db: Session, id_offer: int, user_id: int):
+
+    oferta = db.query(ExchangeOffer).filter(
+        ExchangeOffer.id_offer == id_offer
+    ).first()
+
+    if not oferta:
+        raise HTTPException(404, "Oferta não encontrada")
+
+    if oferta.id_user != user_id:
+        raise HTTPException(403, "Não autorizado")
+
+    if oferta.status != "pendente":
+        raise HTTPException(400, "Oferta já processada")
+
+    # Verifica se já existe uma aceita
+    oferta_ja_aceita = db.query(ExchangeOffer).filter(
+        ExchangeOffer.id_servico_desejado == oferta.id_servico_desejado,
+        ExchangeOffer.status == "aceita"
+    ).first()
+
+    if oferta_ja_aceita:
+        raise HTTPException(400, "Este serviço já possui uma oferta aceita")
+
+    # Aceita
+    oferta.status = "aceita"
+    oferta.data_resposta = datetime.utcnow()
+
+    # 🔥 Cancela outras ofertas automaticamente
+    db.query(ExchangeOffer).filter(
+        ExchangeOffer.id_servico_desejado == oferta.id_servico_desejado,
+        ExchangeOffer.id_offer != id_offer,
+        ExchangeOffer.status == "pendente"
+    ).update({"status": "cancelada"})
+
+    db.commit()
+    db.refresh(oferta)
+
+    return oferta
+
+def recusar_oferta(db: Session, id_offer: int, user_id: int):
+
+    oferta = db.query(ExchangeOffer).filter(
+        ExchangeOffer.id_offer == id_offer
+    ).first()
+
+    if not oferta:
+        raise HTTPException(404, "Oferta não encontrada")
+
+    if oferta.id_user != user_id:
+        raise HTTPException(403, "Não autorizado")
+
+    if oferta.status != "pendente":
+        raise HTTPException(400, "Oferta já processada")
+
+    oferta.status = "recusada"
+    oferta.data_resposta = datetime.utcnow()
+
+    db.commit()
+    db.refresh(oferta)
+
+    return oferta
+
+def concluir_oferta(db: Session, offer_id: int, user_id: int):
+
+    oferta = db.query(ExchangeOffer).filter(
+        ExchangeOffer.id_offer == offer_id
+    ).first()
+
+    if not oferta:
+        raise HTTPException(404, "Oferta não encontrada")
+
+    if oferta.status != "aceita":
+        raise HTTPException(400, "Só ofertas aceitas podem ser concluídas")
+
+    if user_id not in [oferta.id_user, oferta.id_usuario_solicitante]:
+        raise HTTPException(403, "Não autorizado")
+
+    oferta.status = "concluida"
+
+    db.commit()
+    db.refresh(oferta)
+
+    return oferta
+
+def get_trocas(db: Session, user_id: int):
+    return db.query(ExchangeOffer).filter(
+        (ExchangeOffer.id_user == user_id) |
+        (ExchangeOffer.id_usuario_solicitante == user_id)
+    ).all()

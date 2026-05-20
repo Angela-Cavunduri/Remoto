@@ -1,6 +1,7 @@
 from sqlalchemy import Integer,Column,DateTime,ForeignKey,String
 from sqlalchemy.orm import relationship
 from app.database.connection import Base
+from sqlalchemy import Boolean
 
 class Message(Base):
     __tablename__="message"
@@ -10,6 +11,7 @@ class Message(Base):
     id_receiver=Column(Integer,ForeignKey("usuario.id_usuario"),nullable=False)
     conteudo=Column(String(500))
     data_message=Column(DateTime)
+    visualizacao = Column(Boolean, default=False)
 
     sender = relationship("Usuario", foreign_keys=[id_send],back_populates="messages_sent")
     receiver = relationship("Usuario", foreign_keys=[id_receiver],back_populates="messages_received")

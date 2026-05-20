@@ -1,6 +1,7 @@
-from sqlalchemy import Integer,Column,DateTime,ForeignKey,String
+from sqlalchemy import Column, Integer, DateTime, ForeignKey, String
 from sqlalchemy.orm import relationship
 from app.database.connection import Base
+
 
 class Transfer(Base):
     __tablename__ = 'transfer'
@@ -11,5 +12,6 @@ class Transfer(Base):
     data_datroca = Column(DateTime, nullable=True)
     estados = Column(String(50), nullable=True)
 
+    # Relacionamentos
     usuario = relationship('Usuario', back_populates='transfers')
     exchangeoffer = relationship('ExchangeOffer', back_populates='transfers')
