@@ -11,9 +11,10 @@ load_dotenv()
 MYSQL_USER = os.getenv("MYSQL_USER") #quem és (usuário)
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD") #senha
 MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost") #onde fica a casa (host)
+MYSQL_PORT = os.getenv("MYSQL_PORT", "3306") #porta de acesso
 MYSQL_DB = os.getenv("MYSQL_DB") #qual casa exatamente (nome do banco)
 
-DATABASE_URL = f"mysql+mysqlconnector://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}"
+DATABASE_URL = f"mysql+mysqlconnector://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
 
 engine = create_engine(DATABASE_URL, echo=True)
 
