@@ -5,6 +5,12 @@ from fastapi.staticfiles import StaticFiles
 import os
 
 # Importação direta das rotas
+from app.database.connection import engine, Base
+from app.models import user, servico, category, subcategory, review, chat, denuncia, subscription
+
+# Criar todas as tabelas na base de dados se não existirem
+Base.metadata.create_all(bind=engine)
+
 from app.routes import (
     usuario, 
     auth, 
