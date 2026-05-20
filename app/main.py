@@ -6,7 +6,10 @@ import os
 
 # Importação direta das rotas
 from app.database.connection import engine, Base
-from app.models import user, servico, category, subcategory, review, chat, denuncia, subscription
+from app.models import (
+    user, servico, category, company, denuncia, exchangeOffer, 
+    message, paymentExchange, review, transfer, user_sigle
+)
 
 # Criar todas as tabelas na base de dados se não existirem
 Base.metadata.create_all(bind=engine)
