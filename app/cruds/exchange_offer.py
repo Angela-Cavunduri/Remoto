@@ -21,6 +21,9 @@ def create_exchange_offer(
     if not user or not user.is_active:
         raise HTTPException(403, "A sua conta está desativada por não cumprimento das regras da plataforma.")
 
+    if user.nome == "Pendente de Validação":
+        raise HTTPException(403, "A sua conta está Pendente de Validação pela administração. Não pode fazer trocas até que os seus dados sejam validados.")
+
     # 2. Verificar limitações do plano Freemium
     if user.plano != "premium":
         inicio_dia = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
