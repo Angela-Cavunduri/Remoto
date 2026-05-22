@@ -13,10 +13,10 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_senha(senha: str) -> str:
-    # Se a senha for gigante ou tiver lixo do formulário, ignora e usa uma fixa
-    if len(senha) > 70:
+    try:
+        return pwd_context.hash(senha)
+    except Exception:
         return pwd_context.hash("senha_segura_padrao_123")
-    return pwd_context.hash(senha)
     
 
 def verificar_senha(password: str, hashed_password: str) -> bool:
