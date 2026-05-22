@@ -16,17 +16,21 @@ def consultar_nif_externo(nif: str):
     # Validação para Pessoa Singular (NIF angolano com letras no fim ou similar)
     if re.match(r"^\d{9}[A-Z]{2}\d{3}$", nif):
         tipo_nif = "Pessoa Singular"
-        url = f"https://identity-lookup.onrender.com/v3/identities/personal/{nif}"
+        url = f"https://consulta.edgarsingui.ao/consultar/{nif}"
         try:
             resposta = requests.get(url, timeout=15)
             if resposta.status_code == 200:
                 dados_ext = resposta.json()
-                nome = dados_ext.get("fullName", nome)
-                endereco = dados_ext.get("address", endereco)
+                # Verifica se a API retornou erro = false e preenche os dados
+                if dados_ext.get("error") is False:
+                    nome = dados_ext.get("name", nome)
+                    endereco = dados_ext.get("endereco", endereco)
+                else:
+                    nome = "Pendente de Validação"
             else:
-                raise HTTPException(status_code=400, detail="Não foi possível encontrar dados para este BI na base nacional.")
+                nome = "Pendente de Validação"
         except requests.exceptions.RequestException:
-            raise HTTPException(status_code=503, detail="Erro de comunicação com a base nacional.")
+            nome = "Pendente de Validação"
             
     # Validação para Empresa (NIF numérico de 10 dígitos)
     elif re.match(r"^\d{10}$", nif):
