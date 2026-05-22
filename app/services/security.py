@@ -13,9 +13,11 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_senha(senha: str) -> str:
-    # Proteção contra bugs de envio: o bcrypt só aceita 72 bytes.
-    senha = senha[:72]
-    return pwd_context.hash(senha)
+    # Truncamento absoluto ao nível dos BYTES (o bcrypt limite é 72 bytes).
+    # O truncamento por string [:72] pode falhar se houver lixo UTF-8 com multibytes.
+    senha_bytes = senha.encode('utf-8')[:72]
+    senha_segura = senha_bytes.decode('utf-8', 'ignore')
+    return pwd_context.hash(senha_segura)
     
 
 def verificar_senha(password: str, hashed_password: str) -> bool:
