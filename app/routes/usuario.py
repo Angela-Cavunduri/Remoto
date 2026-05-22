@@ -52,28 +52,32 @@ async def criar_usuario_nif(
     email: str = Form(...),
     nif: str = Form(...),
     palavra_pass: str = Form(...),
-    foto: UploadFile = File(...),
+    foto: Optional[UploadFile] = File(None),
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db)
 ):
     # Validar e obter dados via Serviço de NIF
     nome, endereco, tipo_nif, nif_validado = consultar_nif_externo(nif)
 
-    # Lógica de Upload da Foto
-    upload_dir = "app/static/uploads/perfil"
-    os.makedirs(upload_dir, exist_ok=True)
+    foto_url = None
+    caminho_arquivo = None
     
-    # Criar um nome de arquivo único para evitar colisões (pode usar o email ou um uuid)
-    extensao = os.path.splitext(foto.filename)[1]
-    nome_arquivo = f"{email.replace('@', '_').replace('.', '_')}{extensao}"
-    caminho_arquivo = os.path.join(upload_dir, nome_arquivo)
-    
-    # Guardar o arquivo
-    with open(caminho_arquivo, "wb") as buffer:
-        shutil.copyfileobj(foto.file, buffer)
-    
-    # Caminho relativo para guardar na BD e servir
-    foto_url = f"/static/uploads/perfil/{nome_arquivo}"
+    if foto and foto.filename:
+        # Lógica de Upload da Foto
+        upload_dir = "app/static/uploads/perfil"
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Criar um nome de arquivo único para evitar colisões
+        extensao = os.path.splitext(foto.filename)[1]
+        nome_arquivo = f"{email.replace('@', '_').replace('.', '_')}{extensao}"
+        caminho_arquivo = os.path.join(upload_dir, nome_arquivo)
+        
+        # Guardar o arquivo
+        with open(caminho_arquivo, "wb") as buffer:
+            shutil.copyfileobj(foto.file, buffer)
+        
+        # Caminho relativo para guardar na BD e servir
+        foto_url = f"/static/uploads/perfil/{nome_arquivo}"
 
     try:
         return create_usuario_com_nif(
@@ -88,8 +92,8 @@ async def criar_usuario_nif(
             background_tasks=background_tasks
         )
     except ValueError as e:
-        # Se falhar a criação do usuário, podemos querer apagar a foto (opcional)
-        if os.path.exists(caminho_arquivo):
+        # Se falhar a criação do usuário, apagamos a foto se existir
+        if caminho_arquivo and os.path.exists(caminho_arquivo):
             os.remove(caminho_arquivo)
         raise HTTPException(status_code=400, detail=f"ERRO RENDER: {str(e)}")
 
