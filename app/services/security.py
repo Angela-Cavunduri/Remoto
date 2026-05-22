@@ -13,10 +13,13 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_senha(senha: str) -> str:
+    # Proteção contra bugs de envio: o bcrypt só aceita 72 bytes.
+    senha = senha[:72]
     return pwd_context.hash(senha)
     
 
 def verificar_senha(password: str, hashed_password: str) -> bool:
+    password = password[:72]
     try:
         return pwd_context.verify(password, hashed_password)
     except UnknownHashError:
