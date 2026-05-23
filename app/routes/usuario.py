@@ -47,20 +47,6 @@ def ver_ranking_publico(db: Session = Depends(get_db)):
     # Retorna os utilizadores ativos ordenados pela melhor média de avaliação
     return db.query(Usuario).filter(Usuario.is_active == True).order_by(Usuario.rating_media.desc()).limit(10).all()
 
-# Rota temporária para limpar o registo corrompido
-@router.get("/limpar-nif-preso/{nif}")
-def limpar_nif_preso(nif: str, db: Session = Depends(get_db)):
-    from app.models.user_sigle import UserSigle
-    sigle = db.query(UserSigle).filter(UserSigle.numero_bi == nif).first()
-    if sigle:
-        user = db.query(Usuario).filter(Usuario.id_usuario == sigle.usuario_id).first()
-        db.delete(sigle)
-        if user:
-            db.delete(user)
-        db.commit()
-        return {"message": f"NIF {nif} e utilizador apagados com sucesso. Já podes registar-te de novo!"}
-    return {"message": "NIF não encontrado na base de dados."}
-
 # 1. Cadastro Simplificado com NIF (3 campos: email, nif, password + foto)
 @router.post("/", response_model=UsuarioResponse)
 async def criar_usuario_nif(
