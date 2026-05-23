@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, File, UploadFile, Form
+from pydantic import EmailStr
 from sqlalchemy.orm import Session
 import re
 import os
@@ -49,7 +50,7 @@ def ver_ranking_publico(db: Session = Depends(get_db)):
 # 1. Cadastro Simplificado com NIF (3 campos: email, nif, password + foto)
 @router.post("/", response_model=UsuarioResponse)
 async def criar_usuario_nif(
-    email: str = Form(...),
+    email: EmailStr = Form(...),
     nif: str = Form(...),
     palavra_pass: str = Form(...),
     foto: Optional[UploadFile] = File(None),
