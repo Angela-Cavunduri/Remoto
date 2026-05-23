@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from fastapi import BackgroundTasks
 from app.cruds.message import send_email
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
 from app.models.user import Usuario
 from app.models.user_sigle import UserSigle
@@ -80,8 +81,12 @@ def create_usuario_com_nif(db: Session, nome: str, email: str, endereco: str, pa
         )
         db.add(nova_empresa)
     
-    db.commit()
-    db.refresh(novo_usuario)
+    try:
+        db.commit()
+        db.refresh(novo_usuario)
+    except IntegrityError:
+        db.rollback()
+        raise ValueError("Este NIF já se encontra registado.")
 
     if background_tasks:
         assunto = "Verifique a sua conta - Troca Fácil"
