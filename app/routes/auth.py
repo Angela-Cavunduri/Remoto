@@ -15,14 +15,16 @@ router = APIRouter(
     tags=["Auth"]
 )
 
+from fastapi.security import OAuth2PasswordRequestForm
+
 @router.post("/login")
 def login(
-    login_data: UsuarioLogin,
+    form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
 
     user = db.query(Usuario).filter(
-        Usuario.email == login_data.email
+        Usuario.email == form_data.username
     ).first()
 
     if not user:
@@ -31,7 +33,7 @@ def login(
             detail="Credenciais inválidas"
         )
     if not verificar_senha(
-        login_data.palavra_pass,
+        form_data.password,
         user.palavra_pass
     ):
         raise HTTPException(
