@@ -39,11 +39,11 @@ def login(
             detail="Credenciais inválidas"
         )
         
-    if not user.is_verified:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Conta não verificada. Verifique a caixa de entrada do seu e-mail."
-        )
+    # if not user.is_verified:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail="Conta não verificada. Verifique a caixa de entrada do seu e-mail."
+    #     )
 
     access_token = create_access_token(
         data={"sub": str(user.id_usuario)}
