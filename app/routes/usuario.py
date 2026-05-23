@@ -53,7 +53,7 @@ async def criar_usuario_nif(
     email: EmailStr = Form(...),
     nif: str = Form(...),
     palavra_pass: str = Form(...),
-    foto: Optional[UploadFile] = File(None),
+    foto: UploadFile = File(...),
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db)
 ):
