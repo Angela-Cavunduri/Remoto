@@ -89,6 +89,19 @@ async def criar_usuario_nif(
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db)
 ):
+    # ── Validação da Password ─────────────────────────────────
+    if len(palavra_pass) < 8:
+        raise HTTPException(status_code=400, detail="A palavra-passe deve ter no mínimo 8 caracteres.")
+    if len(palavra_pass) > 128:
+        raise HTTPException(status_code=400, detail="A palavra-passe não pode ter mais de 128 caracteres.")
+    if not re.search(r"[A-Z]", palavra_pass):
+        raise HTTPException(status_code=400, detail="A palavra-passe deve conter pelo menos uma letra maiúscula.")
+    if not re.search(r"[a-z]", palavra_pass):
+        raise HTTPException(status_code=400, detail="A palavra-passe deve conter pelo menos uma letra minúscula.")
+    if not re.search(r"[0-9]", palavra_pass):
+        raise HTTPException(status_code=400, detail="A palavra-passe deve conter pelo menos um número.")
+    # ─────────────────────────────────────────────────────────
+
     # Validar e obter dados via Serviço de NIF
     nome, endereco, tipo_nif, nif_validado = consultar_nif_externo(nif)
 
@@ -165,6 +178,18 @@ def atualizar_perfil(
     current_user: Usuario = Depends(get_current_user)
 ):
     if dados.senha:
+        # ── Validação da Nova Password ─────────────────────────
+        if len(dados.senha) < 8:
+            raise HTTPException(status_code=400, detail="A palavra-passe deve ter no mínimo 8 caracteres.")
+        if len(dados.senha) > 128:
+            raise HTTPException(status_code=400, detail="A palavra-passe não pode ter mais de 128 caracteres.")
+        if not re.search(r"[A-Z]", dados.senha):
+            raise HTTPException(status_code=400, detail="A palavra-passe deve conter pelo menos uma letra maiúscula.")
+        if not re.search(r"[a-z]", dados.senha):
+            raise HTTPException(status_code=400, detail="A palavra-passe deve conter pelo menos uma letra minúscula.")
+        if not re.search(r"[0-9]", dados.senha):
+            raise HTTPException(status_code=400, detail="A palavra-passe deve conter pelo menos um número.")
+        # ──────────────────────────────────────────────────────
         current_user.palavra_pass = hash_senha(dados.senha)
     return atualizar_usuario(db, current_user, dados)
 
