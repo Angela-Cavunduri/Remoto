@@ -18,6 +18,8 @@ class UsuarioRankingResponse(BaseModel):
     foto_perfil: Optional[str] = None
     rating_media: int
     is_dangerous: bool = False
+    total_trocas: int = 0
+    total_prestacoes: int = 0
 
     class Config:
         from_attributes = True

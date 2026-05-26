@@ -44,8 +44,40 @@ def ver_estatisticas(db: Session = Depends(get_db)):
 # 0.1 Ranking Público de Utilizadores
 @router.get("/ranking", response_model=List[UsuarioRankingResponse])
 def ver_ranking_publico(db: Session = Depends(get_db)):
-    # Retorna os utilizadores ativos ordenados pela melhor média de avaliação
-    return db.query(Usuario).filter(Usuario.is_active == True).order_by(Usuario.rating_media.desc()).limit(10).all()
+    from app.models.exchangeOffer import ExchangeOffer
+    from app.models.service_booking import ServiceBooking
+    from sqlalchemy import func
+
+    # Buscar os top 10 utilizadores ativos ordenados por avaliação
+    usuarios = db.query(Usuario).filter(
+        Usuario.is_active == True
+    ).order_by(Usuario.rating_media.desc()).limit(10).all()
+
+    resultado = []
+    for user in usuarios:
+        # Contar trocas concluídas (como dono ou solicitante)
+        total_trocas = db.query(func.count(ExchangeOffer.id_offer)).filter(
+            ((ExchangeOffer.id_user == user.id_usuario) | 
+             (ExchangeOffer.id_usuario_solicitante == user.id_usuario)),
+            ExchangeOffer.status == "aceita"
+        ).scalar() or 0
+
+        # Contar prestações concluídas (como prestador)
+        total_prestacoes = db.query(func.count(ServiceBooking.id_pedido)).filter(
+            ServiceBooking.id_prestador == user.id_usuario,
+            ServiceBooking.status == "concluido"
+        ).scalar() or 0
+
+        resultado.append(UsuarioRankingResponse(
+            nome=user.nome,
+            foto_perfil=user.foto_perfil,
+            rating_media=user.rating_media,
+            is_dangerous=user.is_dangerous,
+            total_trocas=total_trocas,
+            total_prestacoes=total_prestacoes
+        ))
+
+    return resultado
 
 # 1. Cadastro Simplificado com NIF (3 campos: email, nif, password + foto)
 @router.post("/", response_model=UsuarioResponse)
