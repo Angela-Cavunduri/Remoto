@@ -8,7 +8,7 @@ import os
 from app.database.connection import engine, Base
 from app.models import (
     user, servico, category, company, denuncia, exchangeOffer, 
-    message, paymentExchange, review, transfer, user_sigle
+    message, paymentExchange, review, transfer, user_sigle, service_booking
 )
 
 # Criar todas as tabelas na base de dados se não existirem
@@ -17,7 +17,7 @@ Base.metadata.create_all(bind=engine)
 from app.routes import (
     usuario, 
     auth, 
-    servico, 
+    servico as servico_router, 
     category, 
     dashboard, 
     exchangeoffer, 
@@ -26,7 +26,8 @@ from app.routes import (
     review,
     payment,
     subscription,
-    denuncia
+    denuncia,
+    service_booking as service_booking_router
 )
 
 app = FastAPI(
@@ -49,7 +50,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 # Inclusão das rotas no servidor
 app.include_router(usuario.router)
 app.include_router(auth.router)
-app.include_router(servico.router)
+app.include_router(servico_router.router)
 app.include_router(category.router)
 app.include_router(dashboard.router)
 app.include_router(exchangeoffer.router)
@@ -59,6 +60,7 @@ app.include_router(review.router)
 app.include_router(payment.router)
 app.include_router(subscription.router)
 app.include_router(denuncia.router)
+app.include_router(service_booking_router.router)
 
 @app.get("/")
 def root():
