@@ -3,8 +3,8 @@ from fastapi import WebSocket
 from app.models.message import Message
 from datetime import datetime
 from app.models.user import Usuario
-import smtplib
-from email.mime.text import MIMEText
+import os
+import requests
 
 
 # 📩 Enviar mensagem
@@ -115,18 +115,35 @@ class ConnectionManager:
 
 
 def send_email(destino, assunto, mensagem):
-    # E-mail corrigido sem os colchetes []
     remetente = "cavunduriagel@gmail.com"
-    senha = "dbndurxhnxrwyuva"
+    api_key = os.getenv("BREVO_API_KEY")
+    
+    if not api_key:
+        print("Erro: A variável BREVO_API_KEY não está definida nas variáveis de ambiente.")
+        return
 
-    msg = MIMEText(mensagem)
-    msg["Subject"] = assunto
-    msg["From"] = remetente
-    msg["To"] = destino
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {
+        "accept": "application/json",
+        "api-key": api_key,
+        "content-type": "application/json"
+    }
+    
+    # Converter a mensagem de texto com quebras de linha para HTML simples
+    mensagem_html = f"<html><body><p>{mensagem.replace('\n', '<br>')}</p></body></html>"
+
+    payload = {
+        "sender": {"name": "Troca Fácil", "email": remetente},
+        "to": [{"email": destino}],
+        "subject": assunto,
+        "htmlContent": mensagem_html
+    }
     
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(remetente, senha)
-            server.send_message(msg)
+        response = requests.post(url, json=payload, headers=headers)
+        if response.status_code == 201:
+            print(f"E-mail enviado com sucesso para {destino} via Brevo API")
+        else:
+            print(f"Aviso: Não foi possível entregar o e-mail para {destino}. Código de status Brevo: {response.status_code}. Resposta: {response.text}")
     except Exception as e:
-        print(f"Aviso: Não foi possível entregar o e-mail para {destino}. Erro: {e}")
+        print(f"Aviso: Erro ao conectar à API do Brevo para {destino}. Erro: {e}")
