@@ -30,12 +30,14 @@ def consultar_nif_externo(nif: str):
                 except Exception:
                     # Se não for JSON, a API do Edgar Singui provavelmente devolveu a página HTML de erro (NIF não encontrado)
                     raise HTTPException(status_code=400, detail="O NIF informado não foi encontrado ou é inválido.")
+            elif resposta.status_code in (400, 404, 422):
+                raise HTTPException(status_code=400, detail="O NIF informado é inválido ou não existe no registo de Angola.")
             else:
                 # Se o status code for 500, 502, 503, etc (A API está em baixo)
                 raise HTTPException(status_code=400, detail="A API de validação do NIF não está a responder de momento. Por favor, tente mais tarde.")
         except requests.exceptions.RequestException:
             # Se der timeout ou erro de rede a contactar a API
-            raise HTTPException(status_code=400, detail="A API de validação do NIF não está a responder de momento. Por favor, tente mais tarde.")
+            raise HTTPException(status_code=400, detail="Falha na ligação à API do NIF. Por favor, tente mais tarde.")
             
     # Validação para Empresa (NIF numérico de 10 dígitos)
     elif re.match(r"^\d{10}$", nif):

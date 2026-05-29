@@ -60,3 +60,11 @@ class UsuarioNifCreate(BaseModel):
 
 class UsuarioReenviarCodigo(BaseModel):
     email: EmailStr
+
+class EsqueciSenhaRequest(BaseModel):
+    email: EmailStr
+
+class RedefinirSenhaRequest(BaseModel):
+    email: EmailStr
+    codigo: str
+    nova_senha: str
