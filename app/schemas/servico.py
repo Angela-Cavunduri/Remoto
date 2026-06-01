@@ -3,8 +3,10 @@ from typing import Optional
 from app.schemas.category import CategoryResponse
 
 class UserShortResponse(BaseModel):
+    id_usuario: int
     nome: str
     rating_media: int
+    is_dangerous: bool = False
 
     class Config:
         from_attributes = True

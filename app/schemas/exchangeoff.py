@@ -14,6 +14,8 @@ class ServicoSimples(BaseModel):
 class UsuarioSimples(BaseModel):
     id_usuario: int
     nome: str
+    is_dangerous: bool = False
+    rating_media: int = 0
     class Config: from_attributes = True
 
 class ExchangeResponse(BaseModel):
