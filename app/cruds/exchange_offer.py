@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.models.exchangeOffer import ExchangeOffer
 from app.models.servico import Servico
 from app.models.user import Usuario
+from app.models.transfer import Transfer
 from app.cruds.message import send_email
 from datetime import datetime
 
@@ -122,6 +123,16 @@ def aceitar_oferta(db: Session, id_offer: int, user_id: int):
         ExchangeOffer.id_offer != id_offer,
         ExchangeOffer.status == "pendente"
     ).update({"status": "cancelada"})
+
+    # ✅ Cria registo na tabela Transfer com os dois utilizadores
+    novo_transfer = Transfer(
+        id_user=oferta.id_user,                               # Dono do serviço (quem ACEITOU)
+        id_usuario_solicitante=oferta.id_usuario_solicitante, # Quem FEZ o pedido de troca
+        id_exchangeoffer=oferta.id_offer,
+        data_datroca=datetime.utcnow(),
+        estados="em andamento"
+    )
+    db.add(novo_transfer)
 
     db.commit()
     db.refresh(oferta)

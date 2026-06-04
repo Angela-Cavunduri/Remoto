@@ -7,7 +7,8 @@ class Transfer(Base):
     __tablename__ = 'transfer'
 
     id_transfer = Column(Integer, primary_key=True, autoincrement=True)
-    id_user = Column(Integer, ForeignKey('usuario.id_usuario'), nullable=True)
+    id_user = Column(Integer, ForeignKey('usuario.id_usuario'), nullable=True)           # Dono do serviço (quem ACEITOU)
+    id_usuario_solicitante = Column(Integer, ForeignKey('usuario.id_usuario'), nullable=True)  # Quem FEZ o pedido
     id_exchangeoffer = Column(Integer, ForeignKey('exchangeoffer.id_offer'), nullable=True)
     data_datroca = Column(DateTime, nullable=True)
     estados = Column(String(50), nullable=True)
