@@ -34,11 +34,11 @@ def consultar_nif_externo(nif: str):
                 raise HTTPException(status_code=400, detail="O NIF informado é inválido ou não existe no registo de Angola.")
             else:
                 # Se a API estiver em baixo (500, etc), não bloqueamos o registo temporariamente
-                nome = "Utilizador (Validação Pendente)"
+                nome = "Pendente de Validação"
                 endereco = "Angola"
         except requests.exceptions.RequestException:
             # Se der timeout ou erro de rede a contactar a API, permitimos o registo
-            nome = "Utilizador (Validação Pendente)"
+            nome = "Pendente de Validação"
             endereco = "Angola"
             
     # Validação para Empresa (NIF numérico de 10 dígitos)

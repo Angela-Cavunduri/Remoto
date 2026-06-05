@@ -126,7 +126,7 @@ async def criar_usuario_nif(
         foto_url = f"/static/uploads/perfil/{nome_arquivo}"
 
     try:
-        return create_usuario_com_nif(
+        user = create_usuario_com_nif(
             db, 
             nome, 
             email, 
@@ -137,6 +137,22 @@ async def criar_usuario_nif(
             foto_perfil=foto_url,
             background_tasks=background_tasks
         )
+        
+        # Construir resposta para incluir o aviso de API em baixo se for o caso
+        user_dict = {
+            "id_usuario": user.id_usuario,
+            "nome": user.nome,
+            "endereco": user.endereco,
+            "email": user.email,
+            "foto_perfil": user.foto_perfil,
+            "rating_media": user.rating_media,
+            "is_dangerous": user.is_dangerous
+        }
+        
+        if user.nome == "Pendente de Validação":
+            user_dict["mensagem_aviso"] = "A API de verificação de NIF parou temporariamente. Foste cadastrado, mas tens de voltar mais tarde para validar o NIF e teres permissões nas trocas ou prestações de serviços."
+            
+        return user_dict
     except ValueError as e:
         # Se falhar a criação do usuário, apagamos a foto se existir
         if caminho_arquivo and os.path.exists(caminho_arquivo):
@@ -200,3 +216,36 @@ def deletar_perfil(
 ):
     deletar_usuario(db, current_user)
     return {"message": "Conta eliminada com sucesso"}
+
+@router.post("/me/validar-nif", response_model=UsuarioResponse)
+def revalidar_nif_pendente(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    if current_user.nome != "Pendente de Validação":
+        raise HTTPException(status_code=400, detail="A sua conta já foi validada.")
+        
+    # Tentar descobrir o NIF associado (Pessoa Singular ou Empresa)
+    nif_para_validar = None
+    if current_user.user_single:
+        nif_para_validar = current_user.user_single.numero_bi
+    elif current_user.company:
+        nif_para_validar = current_user.company.nif_company
+        
+    if not nif_para_validar:
+        raise HTTPException(status_code=400, detail="Não foi encontrado um NIF na sua conta.")
+        
+    # Chamar a API novamente
+    nome, endereco, tipo_nif, nif_validado = consultar_nif_externo(nif_para_validar)
+    
+    # Se continuar pendente, significa que a API ainda está em baixo
+    if nome == "Pendente de Validação":
+        raise HTTPException(status_code=400, detail="A API do Governo ainda se encontra em baixo. Tente novamente mais tarde.")
+        
+    # Se obteve sucesso, atualizamos a conta
+    current_user.nome = nome
+    current_user.endereco = endereco
+    db.commit()
+    db.refresh(current_user)
+    
+    return current_user

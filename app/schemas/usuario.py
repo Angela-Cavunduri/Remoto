@@ -32,6 +32,7 @@ class UsuarioResponse(BaseModel):
     foto_perfil: Optional[str] = None
     rating_media: int = 0
     is_dangerous: bool = False
+    mensagem_aviso: Optional[str] = None
 
     class Config:
         from_attributes = True

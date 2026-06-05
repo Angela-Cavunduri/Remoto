@@ -14,6 +14,9 @@ def create_servico(db: Session, servico: ServicoCreate, user_id: int):
     if not user:
         raise HTTPException(status_code=404, detail="Utilizador não encontrado")
 
+    if user.nome == "Pendente de Validação":
+        raise HTTPException(403, "A sua conta está Pendente de Validação. Não pode publicar serviços até que o seu NIF seja verificado.")
+
     # Se for utilizador Free, verificar limite de 2 serviços criados hoje
     if user.plano != "premium":
         from datetime import datetime
