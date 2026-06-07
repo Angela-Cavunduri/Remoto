@@ -74,17 +74,4 @@ app.include_router(service_booking_router.router)
 def root():
     return {"message": "Backend do Troca Fácil está a funcionar"}
 
-@app.get("/download/android", tags=["Download"])
-def download_android_app():
-    caminho_apk = "app/static/TrocaFacil.apk"
-    if os.path.exists(caminho_apk):
-        return FileResponse(
-            path=caminho_apk, 
-            filename="TrocaFacil_Oficial.apk", 
-            media_type="application/vnd.android.package-archive"
-        )
-    else:
-        raise HTTPException(
-            status_code=404, 
-            detail="O ficheiro da App ainda não foi enviado para o servidor."
-        )
+
