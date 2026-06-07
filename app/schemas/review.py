@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 class ReviewCreate(BaseModel):
@@ -19,3 +19,29 @@ class ReviewResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# Schemas para o histórico de avaliações
+
+class ReviewerInfo(BaseModel):
+    id_usuario: int
+    nome: str
+    foto_perfil: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
+class ReviewDetailResponse(BaseModel):
+    id_review: int
+    avaliacao: int
+    conteudo: Optional[str]
+    data_avaliacao: datetime
+    avaliador: ReviewerInfo
+    
+    class Config:
+        from_attributes = True
+
+class UsuarioReviewsHistoryResponse(BaseModel):
+    total_avaliacoes: int
+    media: float
+    avaliacoes: List[ReviewDetailResponse]
+

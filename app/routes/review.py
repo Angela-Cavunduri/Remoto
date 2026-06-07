@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from app.database.connection import get_db
-from app.schemas.review import ReviewCreate, ReviewResponse
-from app.cruds.review import create_review
+from app.schemas.review import ReviewCreate, ReviewResponse, UsuarioReviewsHistoryResponse
+from app.cruds.review import create_review, get_user_reviews
 from app.services.security import get_current_user
 from app.models.user import Usuario
 
@@ -19,3 +19,10 @@ def avaliar_troca(
         return create_review(db, dados, current_user)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/usuario/{id_usuario}", response_model=UsuarioReviewsHistoryResponse)
+def listar_avaliacoes_usuario(
+    id_usuario: int,
+    db: Session = Depends(get_db)
+):
+    return get_user_reviews(db, id_usuario)

@@ -80,3 +80,21 @@ def concluir_oferta(db: Session, offer_id: int, current_user):
     db.commit()
     db.refresh(oferta)
     return oferta
+
+def get_user_reviews(db: Session, id_usuario: int):
+    # Verificar se utilizador existe
+    user = db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
+    if not user:
+        raise HTTPException(404, "Utilizador não encontrado")
+        
+    # Buscar avaliações
+    avaliacoes = db.query(Review).filter(Review.id_avaliado == id_usuario).order_by(Review.data_avaliacao.desc()).all()
+    
+    total = len(avaliacoes)
+    media = sum(r.avaliacao for r in avaliacoes) / total if total > 0 else 0.0
+    
+    return {
+        "total_avaliacoes": total,
+        "media": round(media, 1),
+        "avaliacoes": avaliacoes
+    }
