@@ -16,7 +16,17 @@ MYSQL_DB = os.getenv("MYSQL_DB") #qual casa exatamente (nome do banco)
 
 DATABASE_URL = f"mysql+mysqlconnector://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
 
-engine = create_engine(DATABASE_URL, echo=True)
+# Aiven e outros provedores cloud exigem SSL obrigatório
+MYSQL_SSL = os.getenv("MYSQL_SSL", "false").lower() == "true"
+
+if MYSQL_SSL:
+    engine = create_engine(
+        DATABASE_URL,
+        echo=True,
+        connect_args={"ssl_disabled": False}
+    )
+else:
+    engine = create_engine(DATABASE_URL, echo=True)
 
 SessionLocal = sessionmaker( #um “canal” por onde entram e saem dados
     autocommit=False,
