@@ -14,5 +14,6 @@ class Transfer(Base):
     estados = Column(String(50), nullable=True)
 
     # Relacionamentos
-    usuario = relationship('Usuario', back_populates='transfers')
+    usuario = relationship('Usuario', foreign_keys=[id_user], back_populates='transfers')
+    solicitante = relationship('Usuario', foreign_keys=[id_usuario_solicitante], back_populates='transfers_solicitados')
     exchangeoffer = relationship('ExchangeOffer', back_populates='transfers')

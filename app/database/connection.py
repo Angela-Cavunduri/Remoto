@@ -16,14 +16,16 @@ MYSQL_DB = os.getenv("MYSQL_DB") #qual casa exatamente (nome do banco)
 
 DATABASE_URL = f"mysql+mysqlconnector://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
 
-# Aiven e outros provedores cloud exigem SSL obrigatório
-MYSQL_SSL = os.getenv("MYSQL_SSL", "false").lower() == "true"
+# Se o host não é local, é um provedor cloud (Aiven, etc.) que exige SSL
+is_cloud = MYSQL_HOST not in ("localhost", "127.0.0.1", None)
 
-if MYSQL_SSL:
+if is_cloud:
     engine = create_engine(
         DATABASE_URL,
         echo=True,
-        connect_args={"ssl_disabled": False}
+        connect_args={"ssl_disabled": False},
+        pool_recycle=300,
+        pool_pre_ping=True
     )
 else:
     engine = create_engine(DATABASE_URL, echo=True)
