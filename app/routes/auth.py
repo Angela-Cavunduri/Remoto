@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
-from app.schemas.usuario import UsuarioUpdate, UsuarioLogin, EsqueciSenhaRequest, RedefinirSenhaRequest
+from app.schemas.usuario import UsuarioUpdate, UsuarioLogin, EsqueciSenhaRequest, RedefinirSenhaRequest, LoginResponse
 from app.services.security import (verificar_senha,create_access_token)
 from app.models.user import Usuario
 from app.database.connection import get_db
@@ -19,7 +19,7 @@ router = APIRouter(
 
 from fastapi.security import OAuth2PasswordRequestForm
 
-@router.post("/login")
+@router.post("/login", response_model=LoginResponse)
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
