@@ -17,10 +17,10 @@ class Usuario(Base):
     __tablename__ = "usuario"
 
     id_usuario = Column(Integer, primary_key=True, autoincrement=True)
-    nome = Column(String(50), nullable=False)
+    nome = Column(String(150), nullable=False)
     email = Column(String(100), nullable=False,unique=True)
     palavra_pass = Column(String(255),nullable=False)
-    endereco = Column(String(50), nullable=False)
+    endereco = Column(String(255), nullable=False)
     is_verified = Column(Boolean, default=False)
     codigo_verificacao = Column(String(10), nullable=True)
     codigo_expiracao = Column(DateTime, nullable=True)
