@@ -37,18 +37,7 @@ class Usuario(Base):
 
     user_single = relationship("UserSigle", back_populates="user", uselist=False)
 
-    # Prestação de Serviços (Service Booking)
-    pedidos_feitos = relationship(
-        "ServiceBooking",
-        back_populates="cliente",
-        foreign_keys="ServiceBooking.id_cliente"
-    )
 
-    trabalhos_recebidos = relationship(
-        "ServiceBooking",
-        back_populates="prestador",
-        foreign_keys="ServiceBooking.id_prestador"
-    )
     company = relationship("Company", back_populates="owner", uselist=False)
     exchangeoffers = relationship('ExchangeOffer',foreign_keys="ExchangeOffer.id_user" ,back_populates='usuario',cascade="all, delete")
     reviews_avaliado = relationship('Review', back_populates='avaliado', foreign_keys='Review.id_avaliado')

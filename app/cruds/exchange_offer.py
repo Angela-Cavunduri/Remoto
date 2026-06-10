@@ -89,7 +89,7 @@ def create_exchange_offer(
     return nova_oferta
 
 
-def aceitar_oferta(db: Session, id_offer: int, user_id: int):
+def aceitar_oferta(db: Session, id_offer: int, user_id: int, background_tasks: BackgroundTasks = None):
 
     oferta = db.query(ExchangeOffer).filter(
         ExchangeOffer.id_offer == id_offer
@@ -126,8 +126,8 @@ def aceitar_oferta(db: Session, id_offer: int, user_id: int):
 
     # ✅ Cria registo na tabela Transfer com os dois utilizadores
     novo_transfer = Transfer(
-        id_user=oferta.id_user,                               # Dono do serviço (quem ACEITOU)
-        id_usuario_solicitante=oferta.id_usuario_solicitante, # Quem FEZ o pedido de troca
+        id_user=oferta.id_user,
+        id_usuario_solicitante=oferta.id_usuario_solicitante,
         id_exchangeoffer=oferta.id_offer,
         data_datroca=datetime.utcnow(),
         estados="em andamento"
@@ -137,9 +137,18 @@ def aceitar_oferta(db: Session, id_offer: int, user_id: int):
     db.commit()
     db.refresh(oferta)
 
+    # 📧 Notificar o solicitante que a proposta foi aceite
+    if background_tasks:
+        solicitante = db.query(Usuario).filter(Usuario.id_usuario == oferta.id_usuario_solicitante).first()
+        aceitante = db.query(Usuario).filter(Usuario.id_usuario == user_id).first()
+        if solicitante and aceitante:
+            assunto = "A tua proposta de troca foi aceite! - Troca Fácil"
+            corpo = f"Olá {solicitante.nome},\n\nBoa notícia! {aceitante.nome} aceitou a tua proposta de troca.\n\nAbre a aplicação para continuar e combinar os detalhes no chat.\n\nEquipa Troca Fácil"
+            background_tasks.add_task(send_email, solicitante.email, assunto, corpo)
+
     return oferta
 
-def recusar_oferta(db: Session, id_offer: int, user_id: int):
+def recusar_oferta(db: Session, id_offer: int, user_id: int, background_tasks: BackgroundTasks = None):
 
     oferta = db.query(ExchangeOffer).filter(
         ExchangeOffer.id_offer == id_offer
@@ -159,6 +168,15 @@ def recusar_oferta(db: Session, id_offer: int, user_id: int):
 
     db.commit()
     db.refresh(oferta)
+
+    # 📧 Notificar o solicitante que a proposta foi recusada
+    if background_tasks:
+        solicitante = db.query(Usuario).filter(Usuario.id_usuario == oferta.id_usuario_solicitante).first()
+        recusante = db.query(Usuario).filter(Usuario.id_usuario == user_id).first()
+        if solicitante and recusante:
+            assunto = "A tua proposta de troca não foi aceite - Troca Fácil"
+            corpo = f"Olá {solicitante.nome},\n\nInfelizmente {recusante.nome} não aceitou a tua proposta de troca desta vez.\n\nNão desistas! Explora outros serviços disponíveis na aplicação.\n\nEquipa Troca Fácil"
+            background_tasks.add_task(send_email, solicitante.email, assunto, corpo)
 
     return oferta
 

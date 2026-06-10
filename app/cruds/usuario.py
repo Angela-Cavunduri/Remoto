@@ -136,7 +136,7 @@ def get_trocas_usuario(db: Session, user_id: int):
     return db.query(ExchangeOffer).filter(
         or_(
             ExchangeOffer.id_user == user_id,
-            ExchangeOffer.servico_desejado.has(id_user=user_id)  
+            ExchangeOffer.id_usuario_solicitante == user_id
         )
     ).all()
 

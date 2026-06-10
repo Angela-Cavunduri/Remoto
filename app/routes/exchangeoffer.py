@@ -25,12 +25,12 @@ def criar(oferta: ExchangeCreate, background_tasks: BackgroundTasks, db: Session
     )
 
 @router.put("/{id}/aceitar", response_model=ExchangeResponse)
-def aceitar(id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    return aceitar_oferta(db, id, user.id_usuario)
+def aceitar(id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    return aceitar_oferta(db, id, user.id_usuario, background_tasks)
 
 @router.put("/{id}/recusar", response_model=ExchangeResponse)
-def recusar(id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    return recusar_oferta(db, id, user.id_usuario)
+def recusar(id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    return recusar_oferta(db, id, user.id_usuario, background_tasks)
 
 @router.put("/{id}/concluir", response_model=ExchangeResponse)
 def concluir(id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
