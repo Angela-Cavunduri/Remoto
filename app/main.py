@@ -8,7 +8,7 @@ import os
 from app.database.connection import engine, Base
 from app.models import (
     user, servico, category, company, denuncia, exchangeOffer, 
-    message, paymentExchange, review, transfer, user_sigle, service_booking
+    message, paymentExchange, review, transfer, user_sigle
 )
 
 # Criar todas as tabelas na base de dados se não existirem
@@ -26,8 +26,7 @@ from app.routes import (
     review,
     payment,
     subscription,
-    denuncia,
-    service_booking as service_booking_router
+    denuncia
 )
 
 app = FastAPI(
@@ -68,10 +67,7 @@ app.include_router(review.router)
 app.include_router(payment.router)
 app.include_router(subscription.router)
 app.include_router(denuncia.router)
-app.include_router(service_booking_router.router)
 
 @app.get("/")
 def root():
     return {"message": "Backend do Troca Fácil está a funcionar"}
-
-

@@ -45,7 +45,7 @@ def ver_estatisticas(db: Session = Depends(get_db)):
 @router.get("/ranking", response_model=List[UsuarioRankingResponse])
 def ver_ranking_publico(db: Session = Depends(get_db)):
     from app.models.exchangeOffer import ExchangeOffer
-    from app.models.service_booking import ServiceBooking
+
     from sqlalchemy import func
 
     # Buscar os top 10 utilizadores ativos ordenados por avaliação
