@@ -1,24 +1,13 @@
 #!/bin/bash
-# Aplicar migrações pendentes antes de arrancar o servidor
-echo "A aplicar migrações da base de dados..."
+set -e
 
-# Usar o caminho do .venv onde o Render instala os pacotes
-if [ -f ".venv/bin/alembic" ]; then
-    .venv/bin/alembic upgrade head
-elif command -v alembic &> /dev/null; then
-    alembic upgrade head
-else
-    echo "AVISO: alembic não encontrado, a saltar migrações..."
-fi
+echo "A sincronizar versão do Alembic com a base de dados..."
 
-# Arrancar o servidor FastAPI
+# stamp head: regista que a BD já está na versão mais recente
+# sem tentar correr nenhuma migração SQL.
+# Isto resolve o erro "Table already exists" quando as tabelas
+# já foram criadas diretamente (Base.metadata.create_all).
+.venv/bin/alembic stamp head
+
 echo "A iniciar o servidor..."
-
-if [ -f ".venv/bin/uvicorn" ]; then
-    .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}
-elif command -v uvicorn &> /dev/null; then
-    uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}
-else
-    echo "ERRO: uvicorn não encontrado!"
-    exit 1
-fi
+.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}
