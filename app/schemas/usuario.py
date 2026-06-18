@@ -8,7 +8,12 @@ class UsuarioCreate(BaseModel):
     endereco:str
 
 class UsuarioNomeResponse(BaseModel):
+    id_usuario: int
     nome: str
+    email: EmailStr
+    foto_perfil: Optional[str] = None
+    rating_media: int = 0
+    is_dangerous: bool = False
 
     class Config:
         from_attributes = True
