@@ -10,7 +10,6 @@ class UsuarioCreate(BaseModel):
 class UsuarioNomeResponse(BaseModel):
     id_usuario: int
     nome: str
-    email: EmailStr
     foto_perfil: Optional[str] = None
     rating_media: int = 0
     is_dangerous: bool = False
