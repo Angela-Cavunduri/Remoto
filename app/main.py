@@ -8,7 +8,7 @@ import os
 from app.database.connection import engine, Base
 from app.models import (
     user, servico, category, company, denuncia, exchangeOffer, 
-    message, paymentExchange, review, transfer, user_sigle
+    message, paymentExchange, review, transfer, user_sigle, service_booking
 )
 
 # Criar todas as tabelas na base de dados se não existirem

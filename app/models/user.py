@@ -78,5 +78,16 @@ class Usuario(Base):
         cascade="all, delete"
     )
     # ──────────────────────────────────────────────────────────
-   
 
+    # ── Service Booking (Prestação de Serviços) ────────────────
+    pedidos_feitos = relationship(
+        'ServiceBooking',
+        foreign_keys='ServiceBooking.id_cliente',
+        back_populates='cliente'
+    )
+    trabalhos_recebidos = relationship(
+        'ServiceBooking',
+        foreign_keys='ServiceBooking.id_prestador',
+        back_populates='prestador'
+    )
+    # ──────────────────────────────────────────────────────────
