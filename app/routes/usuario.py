@@ -177,9 +177,12 @@ def reenviar_codigo(dados: UsuarioReenviarCodigo, background_tasks: BackgroundTa
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-# 4. Listar Usuários Cadastrados
+# 4. Listar Usuários Cadastrados (requer autenticação)
 @router.get("/", response_model=List[UsuarioNomeResponse])
-def listar_usuarios(db: Session = Depends(get_db)):
+def listar_usuarios(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
     return db.query(Usuario).all()
 
 # 4. Perfil do Usuário Logado
