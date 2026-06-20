@@ -14,7 +14,7 @@ class ExchangeOffer(Base):
     id_usuario_solicitante = Column(Integer, ForeignKey("usuario.id_usuario"))
     status = Column(String(20), default="pendente")  # pendente, aceita, recusada
     data_criacao = Column(DateTime, default=datetime.utcnow)
-    mensagem = Column(String (255), default=True)
+    mensagem = Column(String(255), nullable=True)
     data_resposta = Column(DateTime, nullable=True)
 
     # Relacionamentos

@@ -1,23 +1,29 @@
-from sqlalchemy import create_engine #cocneção com o banco de dados
-from sqlalchemy.ext.declarative import declarative_base #permite criar as tabelas usando a línguagem do python
-from dotenv import load_dotenv #lê os arquivos env (lê as regras)
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import os #pega as variaveis do sistema
+import os
 from dotenv import load_dotenv
 
-# Carregar variáveis do arquivo .env
-load_dotenv()
+# Carrega .env se existir, mas não falha se não houver
+load_dotenv(override=True)
 
-MYSQL_USER = os.getenv("MYSQL_USER") #quem és (usuário)
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD") #senha
-MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost") #onde fica a casa (host)
-MYSQL_PORT = os.getenv("MYSQL_PORT", "3306") #porta de acesso
-MYSQL_DB = os.getenv("MYSQL_DB") #qual casa exatamente (nome do banco)
+# Variáveis essenciais (lançar erro claro caso faltem)
+MYSQL_USER = os.getenv("MYSQL_USER")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
+MYSQL_DB = os.getenv("MYSQL_DB")
+MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
+MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
+
+missing = [var for var in ("MYSQL_USER", "MYSQL_PASSWORD", "MYSQL_DB") if not locals()[var]]
+if missing:
+    raise EnvironmentError(
+        f"As variáveis de ambiente {', '.join(missing)} são obrigatórias para conectar ao MySQL."
+    )
 
 DATABASE_URL = f"mysql+mysqlconnector://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
 
-# Se o host não é local, é um provedor cloud (Aiven, etc.) que exige SSL
-is_cloud = MYSQL_HOST not in ("localhost", "127.0.0.1", None)
+# Detecta se o host é um provedor cloud (ex.: Aiven) que requer SSL
+is_cloud = MYSQL_HOST not in ("localhost", "127.0.0.1")
 
 if is_cloud:
     engine = create_engine(
@@ -25,16 +31,12 @@ if is_cloud:
         echo=True,
         connect_args={"ssl_disabled": False},
         pool_recycle=300,
-        pool_pre_ping=True
+        pool_pre_ping=True,
     )
 else:
     engine = create_engine(DATABASE_URL, echo=True)
 
-SessionLocal = sessionmaker( #um “canal” por onde entram e saem dados
-    autocommit=False,
-    autoflush=False,
-    bind=engine
-)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():
     db = SessionLocal()
@@ -43,5 +45,4 @@ def get_db():
     finally:
         db.close()
 
-
-Base = declarative_base() #Cria a base para todas as tabelas
+Base = declarative_base()

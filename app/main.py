@@ -26,7 +26,8 @@ from app.routes import (
     review,
     payment,
     subscription,
-    denuncia
+    service_booking,
+
 )
 
 app = FastAPI(
@@ -66,7 +67,7 @@ app.include_router(transfer.router)
 app.include_router(review.router)
 app.include_router(payment.router)
 app.include_router(subscription.router)
-app.include_router(denuncia.router)
+app.include_router(service_booking.router)
 
 @app.get("/")
 def root():
