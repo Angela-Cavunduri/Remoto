@@ -28,3 +28,9 @@ env/
 *.log
 __pycache__/  
 *.pyc 
+
+# Ignore unused images and dev scripts
+*.jpeg
+*.jpg
+start.sh
+t.py

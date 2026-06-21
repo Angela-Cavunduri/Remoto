@@ -8,13 +8,13 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 # Variáveis essenciais (lançar erro claro caso faltem)
-MYSQL_USER = os.getenv("MYSQL_USER")
+MYSQL_USER = os.getenv("MYSQL_USER", "avnadmin!")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
 MYSQL_DB = os.getenv("MYSQL_DB")
 MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
 MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
 
-missing = [var for var in ("MYSQL_USER", "MYSQL_PASSWORD", "MYSQL_DB") if not locals()[var]]
+missing = [var for var in ("MYSQL_USER", "MYSQL_PASSWORD", "MYSQL_DB") if not os.getenv(var)]
 if missing:
     raise EnvironmentError(
         f"As variáveis de ambiente {', '.join(missing)} são obrigatórias para conectar ao MySQL."
