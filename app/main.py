@@ -14,6 +14,8 @@ from app.models import (
 # Criar todas as tabelas na base de dados se não existirem
 Base.metadata.create_all(bind=engine)
 
+from app.routes.cleanup_images import router as cleanup_router
+
 from app.routes import (
     usuario, 
     auth, 
@@ -52,8 +54,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# Servir arquivos estáticos (fotos de perfil, etc)
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+import os
+
+# Ensure upload directory exists on startup
+upload_dir = os.path.join('app', 'static', 'uploads', 'perfil')
+os.makedirs(upload_dir, exist_ok=True)
+
+# Serve static files (profile photos, etc.)
+app.mount(
+    "/static",
+    StaticFiles(directory=os.path.join('app', 'static')),
+    name="static",
+)
+
 
 # Inclusão das rotas no servidor
 app.include_router(usuario.router)
@@ -67,6 +80,7 @@ app.include_router(transfer.router)
 app.include_router(review.router)
 app.include_router(payment.router)
 app.include_router(subscription.router)
+app.include_router(cleanup_router)
 app.include_router(service_booking.router)
 
 @app.get("/")

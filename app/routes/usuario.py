@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, File, UploadFile, Form
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Form
 from pydantic import EmailStr
 from sqlalchemy.orm import Session
 import re
@@ -85,11 +85,21 @@ async def criar_usuario_nif(
     email: EmailStr = Form(...),
     nif: str = Form(...),
     palavra_pass: str = Form(...),
-    foto: UploadFile = File(...),
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db)
 ):
-    # ── Validação da Password ─────────────────────────────────
+
+    # ─────────────────────────────────────────────────────────
+
+    # Validar e obter dados via Serviço de NIF
+    nome, endereco, tipo_nif, nif_validado = consultar_nif_externo(nif)
+
+    foto_url = None
+    caminho_arquivo = None
+
+    # Removed previous user creation block; will validate password first then create user.
+
+        # ── Validação da Password ─────────────────────────────────
     if len(palavra_pass) < 8:
         raise HTTPException(status_code=400, detail="A palavra-passe deve ter no mínimo 8 caracteres.")
     if len(palavra_pass) > 128:
@@ -100,45 +110,20 @@ async def criar_usuario_nif(
         raise HTTPException(status_code=400, detail="A palavra-passe deve conter pelo menos uma letra minúscula.")
     if not re.search(r"[0-9]", palavra_pass):
         raise HTTPException(status_code=400, detail="A palavra-passe deve conter pelo menos um número.")
-    # ─────────────────────────────────────────────────────────
-
-    # Validar e obter dados via Serviço de NIF
-    nome, endereco, tipo_nif, nif_validado = consultar_nif_externo(nif)
-
-    foto_url = None
-    caminho_arquivo = None
-    
-    if foto and foto.filename:
-        # Lógica de Upload da Foto
-        upload_dir = "app/static/uploads/perfil"
-        os.makedirs(upload_dir, exist_ok=True)
-        
-        # Criar um nome de arquivo único para evitar colisões
-        extensao = os.path.splitext(foto.filename)[1]
-        nome_arquivo = f"{email.replace('@', '_').replace('.', '_')}{extensao}"
-        caminho_arquivo = os.path.join(upload_dir, nome_arquivo)
-        
-        # Guardar o arquivo
-        with open(caminho_arquivo, "wb") as buffer:
-            shutil.copyfileobj(foto.file, buffer)
-        
-        # Caminho relativo para guardar na BD e servir
-        foto_url = f"/static/uploads/perfil/{nome_arquivo}"
 
     try:
         user = create_usuario_com_nif(
-            db, 
-            nome, 
-            email, 
-            endereco, 
-            palavra_pass, 
-            nif_validado, 
-            tipo_nif, 
+            db,
+            nome,
+            email,
+            endereco,
+            palavra_pass,
+            nif_validado,
+            tipo_nif,
             foto_perfil=foto_url,
             background_tasks=background_tasks
         )
-        
-        # Construir resposta para incluir o aviso de API em baixo se for o caso
+
         user_dict = {
             "id_usuario": user.id_usuario,
             "nome": user.nome,
@@ -148,10 +133,10 @@ async def criar_usuario_nif(
             "rating_media": user.rating_media,
             "is_dangerous": user.is_dangerous
         }
-        
+
         if user.nome == "Pendente de Validação":
             user_dict["mensagem_aviso"] = "A API de verificação de NIF parou temporariamente. Foste cadastrado, mas tens de voltar mais tarde para validar o NIF e teres permissões nas trocas ou prestações de serviços."
-            
+
         return user_dict
     except ValueError as e:
         # Se falhar a criação do usuário, apagamos a foto se existir
@@ -187,27 +172,10 @@ def listar_usuarios(db: Session = Depends(get_db)):
 def ver_perfil(current_user: Usuario = Depends(get_current_user)):
     return current_user
 
-@router.patch("/me", response_model=UsuarioResponse)
-def atualizar_perfil(
-    dados: UsuarioUpdate,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user)
-):
-    if dados.senha:
-        # ── Validação da Nova Password ─────────────────────────
-        if len(dados.senha) < 8:
-            raise HTTPException(status_code=400, detail="A palavra-passe deve ter no mínimo 8 caracteres.")
-        if len(dados.senha) > 128:
-            raise HTTPException(status_code=400, detail="A palavra-passe não pode ter mais de 128 caracteres.")
-        if not re.search(r"[A-Z]", dados.senha):
-            raise HTTPException(status_code=400, detail="A palavra-passe deve conter pelo menos uma letra maiúscula.")
-        if not re.search(r"[a-z]", dados.senha):
-            raise HTTPException(status_code=400, detail="A palavra-passe deve conter pelo menos uma letra minúscula.")
-        if not re.search(r"[0-9]", dados.senha):
-            raise HTTPException(status_code=400, detail="A palavra-passe deve conter pelo menos um número.")
-        # ──────────────────────────────────────────────────────
-        current_user.palavra_pass = hash_senha(dados.senha)
-    return atualizar_usuario(db, current_user, dados)
+
+
+
+
 
 @router.delete("/me")
 def deletar_perfil(
@@ -216,6 +184,8 @@ def deletar_perfil(
 ):
     deletar_usuario(db, current_user)
     return {"message": "Conta eliminada com sucesso"}
+
+# Removed photo upload endpoint as per user request.
 
 @router.post("/me/validar-nif", response_model=UsuarioResponse)
 def revalidar_nif_pendente(

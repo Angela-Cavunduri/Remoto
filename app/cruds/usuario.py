@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
 from app.models.user import Usuario
-from app.models.user_sigle import UserSigle
+import os
 from app.models.company import Company
 from app.models.servico import Servico
 from app.models.exchangeOffer import ExchangeOffer
@@ -104,6 +104,22 @@ def atualizar_usuario(db: Session, usuario, dados_update):
     return usuario
 
 def deletar_usuario(db: Session, usuario: Usuario):
+    # Delete associated profile image file if it exists
+    if usuario.foto_perfil:
+        # Expected format: /static/uploads/perfil/<filename>
+        # Construct absolute path relative to the project root directory
+        # Determine the directory of this file (app/cruds) and go up one level to the project root
+        crud_dir = os.path.dirname(__file__)
+        project_root = os.path.abspath(os.path.join(crud_dir, '..'))
+        # Remove leading slash and join with project root
+        relative_path = usuario.foto_perfil.lstrip('/')
+        file_path = os.path.join(project_root, relative_path)
+        try:
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            # Log error but do not prevent user deletion
+            print(f"Failed to delete profile image {file_path}: {e}")
     db.delete(usuario)
     db.commit()
     return {"mensagem": "Usuário deletado com sucesso"}
