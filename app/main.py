@@ -57,11 +57,7 @@ app.add_middleware(
 import os
 
 # Ensure upload directory exists on startup
-# The application now stores profile photos in an external S3 bucket.
-# The static directory is no longer required; upload handling is done via S3.
-# upload_dir = os.path.join('app', 'static', 'uploads', 'perfil')
-# os.makedirs(upload_dir, exist_ok=True)
-# app.mount("/static", StaticFiles(directory=os.path.join('app', 'static')), name="static")
+upload_dir = os.path.join('app', 'static', 'uploads', 'perfil')
 os.makedirs(upload_dir, exist_ok=True)
 
 # Serve static files (profile photos, etc.)
