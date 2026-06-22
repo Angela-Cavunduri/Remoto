@@ -24,7 +24,7 @@ class Usuario(Base):
     is_verified = Column(Boolean, default=False)
     codigo_verificacao = Column(String(10), nullable=True)
     codigo_expiracao = Column(DateTime, nullable=True)
-    foto_perfil = Column(String(255), nullable=True)
+    foto_perfil = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
     rating_media = Column(Integer, default=0)  # Média simples ou escala de 1 a 5
 
