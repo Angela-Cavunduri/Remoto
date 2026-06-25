@@ -82,6 +82,7 @@ app.include_router(payment.router)
 app.include_router(subscription.router)
 app.include_router(cleanup_router)
 app.include_router(service_booking.router)
+app.include_router(profile_photos.router, prefix="/profile")
 
 @app.get("/")
 def root():
