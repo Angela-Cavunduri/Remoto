@@ -14,7 +14,7 @@ from app.models import (
 # Criar todas as tabelas na base de dados se não existirem
 Base.metadata.create_all(bind=engine)
 
-from app.routes.cleanup_images import router as cleanup_router
+from app.routes.profile_photos import router as profile_photos_router
 
 from app.routes import (
     usuario, 
@@ -82,7 +82,7 @@ app.include_router(payment.router)
 app.include_router(subscription.router)
 app.include_router(cleanup_router)
 app.include_router(service_booking.router)
-app.include_router(profile_photos.router, prefix="/profile")
+app.include_router(profile_photos_router, prefix="/profile")
 
 @app.get("/")
 def root():
