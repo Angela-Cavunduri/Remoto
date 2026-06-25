@@ -15,7 +15,7 @@ from app.models import (
 Base.metadata.create_all(bind=engine)
 
 from app.routes.profile_photos import router as profile_photos_router
-
+from app.routes.cleanup_images import router as cleanup_router
 from app.routes import (
     usuario, 
     auth, 
