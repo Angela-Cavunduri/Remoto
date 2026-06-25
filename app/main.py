@@ -12,7 +12,13 @@ from app.models import (
 )
 
 # Criar todas as tabelas na base de dados se não existirem
-Base.metadata.create_all(bind=engine)
+# Attempt to create tables; ignore errors if DB is unreachable
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    # Log the error but allow the app to start (useful for dev when DB is offline)
+    import logging
+    logging.getLogger(__name__).warning("Database tables not created: %s", e)
 
 from app.routes.profile_photos import router as profile_photos_router
 from app.routes.cleanup_images import router as cleanup_router

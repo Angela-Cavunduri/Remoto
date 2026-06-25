@@ -28,11 +28,13 @@ else:
 # Detecta se o host é um provedor cloud (ex.: Aiven) que requer SSL
 is_cloud = MYSQL_HOST not in ("localhost", "127.0.0.1")
 
+# Adjust SSL handling based on environment variable
+ssl_disabled = os.getenv("MYSQL_SSL_DISABLED", "false").lower() == "true"
 if is_cloud:
     engine = create_engine(
         DATABASE_URL,
         echo=True,
-        connect_args={"ssl_disabled": False},
+        connect_args={"ssl_disabled": ssl_disabled},
         pool_recycle=300,
         pool_pre_ping=True,
     )
