@@ -32,6 +32,6 @@ __pycache__/
 # Ignore unused images and dev scripts
 # *.jpeg
 # *.jpg
-# *.jpg
+# # *.jpg
 start.sh
 t.py
