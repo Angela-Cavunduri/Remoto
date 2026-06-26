@@ -93,3 +93,13 @@ app.include_router(profile_photos_router, prefix="/profile")
 @app.get("/")
 def root():
     return {"message": "Backend do Troca Fácil está a funcionar"}
+
+@app.get("/run-alembic")
+def run_alembic():
+    import subprocess
+    try:
+        result = subprocess.run(["alembic", "upgrade", "head"], capture_output=True, text=True, check=True)
+        return {"success": True, "output": result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"success": False, "error": e.stderr}
+
