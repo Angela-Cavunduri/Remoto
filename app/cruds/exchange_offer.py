@@ -134,8 +134,12 @@ def aceitar_oferta(db: Session, id_offer: int, user_id: int, background_tasks: B
     )
     db.add(novo_transfer)
 
-    db.commit()
-    db.refresh(oferta)
+    try:
+        db.commit()
+        db.refresh(oferta)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Erro ao aceitar a oferta. Por favor, tente novamente ou contacte o suporte.")
 
     # 📧 Notificar o solicitante que a proposta foi aceite
     if background_tasks:
