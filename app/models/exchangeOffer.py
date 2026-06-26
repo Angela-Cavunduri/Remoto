@@ -18,7 +18,7 @@ class ExchangeOffer(Base):
     data_resposta = Column(DateTime, nullable=True)
 
     # Relacionamentos
-    usuario = relationship("Usuario", foreign_keys=[id_user] ,back_populates="exchangeoffers")
+    usuario = relationship("Usuario", foreign_keys=[id_usuario_destinatario] ,back_populates="exchangeoffers")
 
     servico_oferecido = relationship(
         "Servico",
