@@ -6,6 +6,7 @@ services:
     startCommand: |
       mkdir -p app/static/uploads/perfil
       chmod 755 app/static/uploads/perfil
+      alembic upgrade head
       uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /
     envVars:
