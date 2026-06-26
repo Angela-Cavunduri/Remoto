@@ -1,0 +1,15 @@
+55af274 ainda, mas espero que ja
+40cca9e ainda
+d9189c5 ainda
+84b4a96 ainda
+2447f41 ainda
+d118c83 ainda
+61f3c98 ainda
+5aaa7b1 trocar o nome do destinatário
+ac0ada3 falha em aceitar troca
+d6d570d melhorara a função da imagem
+5706903 acho que consegui
+11afa71 tentando
+99adc90 continua
+0dfa087 permitir que as imagens não sejam ignoradas pelo o git
+9cadb67 fotos, problemas

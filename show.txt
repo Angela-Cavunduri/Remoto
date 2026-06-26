@@ -1,0 +1,63 @@
+55af274 ainda, mas espero que ja
+ ...6349b50a_rename_exchangeoffer_id_user_to_id_.py | 56 ----------------------
+ app/cruds/exchange_offer.py                        | 16 +++----
+ app/models/exchangeOffer.py                        |  4 +-
+ app/models/user.py                                 |  2 +-
+ app/routes/usuario.py                              |  2 +-
+ app/schemas/exchangeoff.py                         |  2 +-
+ log.txt                                            |  0
+ 7 files changed, 13 insertions(+), 69 deletions(-)
+40cca9e ainda
+ ...6349b50a_rename_exchangeoffer_id_user_to_id_.py | 56 ++++++++++++++++++++++
+ render.yaml                                        |  1 +
+ 2 files changed, 57 insertions(+)
+d9189c5 ainda
+ app/models/exchangeOffer.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+84b4a96 ainda
+ app/models/exchangeOffer.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+2447f41 ainda
+ app/routes/auth.py       | 68 +++++++++++++++++++++++++-----------------------
+ app/services/security.py |  5 ++--
+ 2 files changed, 38 insertions(+), 35 deletions(-)
+d118c83 ainda
+ app/models/exchangeOffer.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+61f3c98 ainda
+ app/cruds/exchange_offer.py | 8 ++++----
+ app/routes/usuario.py       | 4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+5aaa7b1 trocar o nome do destinatário
+ app/cruds/exchange_offer.py |  9 ++++-----
+ app/models/exchangeOffer.py |  4 ++--
+ app/models/user.py          | 16 +---------------
+ app/schemas/exchangeoff.py  |  2 +-
+ 4 files changed, 8 insertions(+), 23 deletions(-)
+ac0ada3 falha em aceitar troca
+ app/cruds/exchange_offer.py | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+d6d570d melhorara a função da imagem
+ app/routes/profile_photos.py | 30 ++++++++++++++++++++++++------
+ 1 file changed, 24 insertions(+), 6 deletions(-)
+5706903 acho que consegui
+ ...o_gmail_com.jpeg.png => cavundurileandro_gmail_com.jpeg} | Bin
+ ...ia_gmail_com.jpg.png => cristianoakgloria_gmail_com.jpg} | Bin
+ ...gicadeja_gmail_com.jpg.png => txigicadeja_gmail_com.jpg} | Bin
+ 3 files changed, 0 insertions(+), 0 deletions(-)
+11afa71 tentando
+ .gitignore | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
+99adc90 continua
+ .gitignore | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+0dfa087 permitir que as imagens não sejam ignoradas pelo o git
+ .gitignore                                             |   5 +++--
+ .../perfil/angelacavundurijulcira_gmail_com.jpg        | Bin 0 -> 664828 bytes
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+9cadb67 fotos, problemas
+ app/database/connection.py   |  4 +++-
+ app/main.py                  |  8 +++++++-
+ app/routes/profile_photos.py | 15 ++++++++++++++-
+ scripts/clean_foto_perfil.py | 35 +++++++++++++++++++++++++++++++++++
+ 4 files changed, 59 insertions(+), 3 deletions(-)
