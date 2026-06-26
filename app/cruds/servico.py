@@ -63,51 +63,49 @@ def create_servico(db: Session, servico: ServicoCreate, user_id: int):
 
 def get_servicos(
     db: Session,
-    categoria: int = None,
-    search: str = None,
-    user_id: int = None,
-    status: str = None,
+    categoria: int | None = None,
+    search: str | None = None,
+    user_id: int | None = None,
+    status: str | None = None,
     skip: int = 0,
-    limit: int = 10
-):
-    # Query base
-    query = db.query(Servico).join(Usuario).options(
-        joinedload(Servico.category),
-        joinedload(Servico.usuario)
-    )
+    limit: int = 10,
+) -> list[Servico]:
+    """Retrieve a list of services with optional filters.
 
-    # Filtrar apenas serviços de utilizadores ativos
+    - ``categoria``: filter by category id (int). If a string is supplied it is converted to int.
+    - ``search``: free‑text search on ``descricao`` or ``nome``.
+    - ``user_id``: filter services owned by a specific user.
+    - ``status``: filter by service status.
+    - ``skip``/``limit``: pagination.
+    """
+    # Normalise ``categoria`` if it arrives as a string
+    if categoria is not None and not isinstance(categoria, int):
+        try:
+            categoria = int(categoria)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Categoria deve ser um número inteiro")
+
+    # Base query – join the author to allow active‑user filtering and eager loads
+    query = (
+        db.query(Servico)
+        .join(Usuario)
+        .options(joinedload(Servico.category), joinedload(Servico.usuario))
+    )
+    # Only consider services whose owners are active
     query = query.filter(Usuario.is_active == True)
 
-    if categoria:
+    # ---------------------------------------------------------------------
+    # Filters
+    # ---------------------------------------------------------------------
+    if categoria is not None:
         query = query.filter(Servico.id_category == categoria)
-        
-        # Ranking por Categoria: Calcular a média de estrelas deste utilizador NESTA categoria
-        subquery = db.query(
-            Review.id_avaliado,
-            func.avg(Review.avaliacao).label("media_categoria")
-        ).join(ExchangeOffer, Review.id_exchange_offer == ExchangeOffer.id_offer)\
-         .filter(ExchangeOffer.id_servico_desejado.has(id_category=categoria))\
-         .group_by(Review.id_avaliado).subquery()
-        
-        query = query.outerjoin(subquery, Usuario.id_usuario == subquery.c.id_avaliado)
-        # Ordenar primeiro pela média na categoria, depois pela média geral
-        query = query.order_by(subquery.c.media_categoria.desc(), Usuario.rating_media.desc())
-    else:
-        # Ordenar por Ranking Geral (rating_media) por padrão
-        query = query.order_by(Usuario.rating_media.desc())
-
-    if search:
         query = query.filter(
             (Servico.descricao.ilike(f"%{search}%")) | (Servico.nome.ilike(f"%{search}%"))
         )
-
     if user_id:
         query = query.filter(Servico.id_user == user_id)
-    
     if status:
         query = query.filter(Servico.status == status)
-
     return query.offset(skip).limit(limit).all()
 
 def update_servico(db: Session, id_servico: int, dados: ServicoUpdate, user_id: int):
