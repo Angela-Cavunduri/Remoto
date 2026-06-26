@@ -139,7 +139,7 @@ def aceitar_oferta(db: Session, id_offer: int, user_id: int, background_tasks: B
         db.refresh(oferta)
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Erro ao aceitar a oferta. Por favor, tente novamente ou contacte o suporte.")
+        raise HTTPException(status_code=400, detail=f"Erro ao aceitar a oferta. Detalhes: {str(e)}")
 
     # 📧 Notificar o solicitante que a proposta foi aceite
     if background_tasks:
