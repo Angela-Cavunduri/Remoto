@@ -20,7 +20,7 @@ class UsuarioSimples(BaseModel):
 
 class ExchangeResponse(BaseModel):
     id_offer: int
-    id_user: int
+    id_usuario_destinatario: int
     id_servico_oferecido: int
     id_servico_desejado: int
     id_usuario_solicitante: int

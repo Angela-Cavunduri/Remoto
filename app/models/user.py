@@ -39,21 +39,7 @@ class Usuario(Base):
 
 
     company = relationship("Company", back_populates="owner", uselist=False)
-    exchangeoffers = relationship('ExchangeOffer',foreign_keys="ExchangeOffer.id_user" ,back_populates='usuario',cascade="all, delete")
-    reviews_avaliado = relationship('Review', back_populates='avaliado', foreign_keys='Review.id_avaliado')
-    reviews_avaliador = relationship('Review', back_populates='avaliador', foreign_keys='Review.id_avaliador')
-    servicos = relationship('Servico', back_populates='usuario',cascade="all, delete")
-    transfers = relationship('Transfer', foreign_keys='Transfer.id_user', back_populates='usuario')
-    transfers_solicitados = relationship('Transfer', foreign_keys='Transfer.id_usuario_solicitante', back_populates='solicitante')
-    solicitacoes_feitas = relationship(
-    "ExchangeOffer",
-    foreign_keys="ExchangeOffer.id_usuario_solicitante",
-        back_populates="trocas_solicitadas"
-    )
-    
-
-    # Relacionamento com mensagens enviadas
-    messages_sent = relationship("Message",foreign_keys="Message.id_send",back_populates="sender")
+    exchangeoffers = relationship('ExchangeOffer',foreign_keys="ExchangeOffer.id_usuario_destinatario" ,back_populates='usuario',cascade="all, delete")
 
     # Relacionamento com mensagens recebidas
     messages_received = relationship("Message",foreign_keys="Message.id_receiver",back_populates="receiver")

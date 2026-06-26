@@ -8,7 +8,7 @@ class ExchangeOffer(Base):
     __tablename__ = 'exchangeoffer'
 
     id_offer = Column(Integer, primary_key=True, autoincrement=True)
-    id_user = Column(Integer, ForeignKey("usuario.id_usuario"), nullable=False)
+    id_usuario_destinatario = Column(Integer, ForeignKey("usuario.id_usuario"), nullable=False)
     id_servico_oferecido = Column(Integer, ForeignKey("servico.id_servico"), nullable=False)
     id_servico_desejado = Column(Integer, ForeignKey("servico.id_servico"), nullable=False)
     id_usuario_solicitante = Column(Integer, ForeignKey("usuario.id_usuario"))
@@ -18,7 +18,7 @@ class ExchangeOffer(Base):
     data_resposta = Column(DateTime, nullable=True)
 
     # Relacionamentos
-    usuario = relationship("Usuario",foreign_keys=[id_user] ,back_populates="exchangeoffers")
+    usuario = relationship("Usuario", foreign_keys=[id_usuario_destinatario] ,back_populates="exchangeoffers")
 
     servico_oferecido = relationship(
         "Servico",

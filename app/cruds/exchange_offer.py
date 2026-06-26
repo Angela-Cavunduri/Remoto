@@ -66,7 +66,7 @@ def create_exchange_offer(
         raise HTTPException(403, "Você só pode oferecer seus próprios serviços")
 
     nova_oferta = ExchangeOffer(
-        id_user=servico_desejado.id_user,  # dono do serviço desejado
+        id_usuario_destinatario=servico_desejado.id_user,  # dono do serviço desejado
         id_servico_oferecido=id_servico_oferecido,
         id_servico_desejado=id_servico_desejado,
         id_usuario_solicitante=user_id,
@@ -98,7 +98,7 @@ def aceitar_oferta(db: Session, id_offer: int, user_id: int, background_tasks: B
     if not oferta:
         raise HTTPException(404, "Oferta não encontrada")
 
-    if oferta.id_user != user_id:
+    if oferta.id_usuario_destinatario != user_id:
         raise HTTPException(403, "Não autorizado")
 
     if oferta.status != "pendente":
@@ -161,7 +161,7 @@ def recusar_oferta(db: Session, id_offer: int, user_id: int, background_tasks: B
     if not oferta:
         raise HTTPException(404, "Oferta não encontrada")
 
-    if oferta.id_user != user_id:
+    if oferta.id_usuario_destinatario != user_id:
         raise HTTPException(403, "Não autorizado")
 
     if oferta.status != "pendente":
@@ -208,6 +208,5 @@ def concluir_oferta(db: Session, offer_id: int, user_id: int):
 
 def get_trocas(db: Session, user_id: int):
     return db.query(ExchangeOffer).filter(
-        (ExchangeOffer.id_user == user_id) |
-        (ExchangeOffer.id_usuario_solicitante == user_id)
+        (ExchangeOffer.id_usuario_destinatario == user_id) | (ExchangeOffer.id_usuario_solicitante == user_id),
     ).all()
