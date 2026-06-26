@@ -25,39 +25,43 @@ def login(
     db: Session = Depends(get_db)
 ):
 
-    user = db.query(Usuario).filter(
-        Usuario.email == form_data.username
-    ).first()
+    try:
+        # Busca usuário
+        user = db.query(Usuario).filter(
+            Usuario.email == form_data.username
+        ).first()
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciais inválidas"
-        )
-    if not verificar_senha(
-        form_data.password,
-        user.palavra_pass
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciais inválidas"
-        )
-        
-    if not user.is_verified:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Conta não verificada. Verifique a caixa de entrada do seu e-mail."
-        )
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Credenciais inválidas"
+            )
 
-    access_token = create_access_token(
-        data={"sub": str(user.id_usuario)}
-    )
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "id_usuario": user.id_usuario,
-        "nome": user.nome
-    }
+        if not verificar_senha(
+            form_data.password,
+            user.palavra_pass
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Credenciais inválidas"
+            )
+
+        # Verificação de conta verificada desativada temporariamente (comentada acima)
+
+        access_token = create_access_token(
+            data={"sub": str(user.id_usuario)}
+        )
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "id_usuario": user.id_usuario,
+            "nome": user.nome
+        }
+    except Exception as e:
+        import logging
+        logger = logging.getLogger("uvicorn.error")
+        logger.exception("Erro inesperado no login")
+        raise HTTPException(status_code=500, detail="Erro interno no servidor")
 
 @router.post("/esqueci-senha")
 def esqueci_senha(

@@ -21,10 +21,9 @@ def hash_senha(senha: str) -> str:
 
 def verificar_senha(password: str, hashed_password: str) -> bool:
     password = password[:72]
-    try:
-        return pwd_context.verify(password, hashed_password)
-    except UnknownHashError:
+    if not hashed_password:
         return False
+    return pwd_context.verify(password, hashed_password)
 
 SECRET_KEY = "troca_fácil_super_secreta_123"
 ALGORITHM = "HS256"
