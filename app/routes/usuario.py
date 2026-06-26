@@ -57,8 +57,8 @@ def ver_ranking_publico(db: Session = Depends(get_db)):
     for user in usuarios:
         # Contar trocas concluídas (como dono ou solicitante)
         total_trocas = db.query(func.count(ExchangeOffer.id_offer)).filter(
-            ((ExchangeOffer.id_user == user.id_usuario) | 
-             (ExchangeOffer.id_usuario_solicitante == user.id_usuario)),
+            ((ExchangeOffer.id_usuario_destinatario == user.id_usuario) | 
+                 (ExchangeOffer.id_usuario_solicitante == user.id_usuario)),
             ExchangeOffer.status == "aceita"
         ).scalar() or 0
 

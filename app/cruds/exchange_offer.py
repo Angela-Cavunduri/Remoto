@@ -41,7 +41,7 @@ def create_exchange_offer(
 
     # 3. Verificar se o utilizador tem trocas pendentes ou aceites que ainda não foram concluídas
     troca_ativa = db.query(ExchangeOffer).filter(
-        (ExchangeOffer.id_usuario_solicitante == user_id) | (ExchangeOffer.id_user == user_id),
+        (ExchangeOffer.id_usuario_solicitante == user_id) | (ExchangeOffer.id_usuario_destinatario == user_id),
         ExchangeOffer.status == "aceita"
     ).first()
 
@@ -78,7 +78,7 @@ def create_exchange_offer(
     db.refresh(nova_oferta)
 
     if background_tasks:
-        dono_servico = db.query(Usuario).filter(Usuario.id_usuario == nova_oferta.id_user).first()
+        dono_servico = db.query(Usuario).filter(Usuario.id_usuario == nova_oferta.id_usuario_destinatario).first()
         solicitante = db.query(Usuario).filter(Usuario.id_usuario == user_id).first()
         
         if dono_servico and solicitante:
@@ -126,7 +126,7 @@ def aceitar_oferta(db: Session, id_offer: int, user_id: int, background_tasks: B
 
     # ✅ Cria registo na tabela Transfer com os dois utilizadores
     novo_transfer = Transfer(
-        id_user=oferta.id_user,
+        id_user=oferta.id_usuario_destinatario,
         id_usuario_solicitante=oferta.id_usuario_solicitante,
         id_exchangeoffer=oferta.id_offer,
         data_datroca=datetime.utcnow(),
@@ -196,7 +196,7 @@ def concluir_oferta(db: Session, offer_id: int, user_id: int):
     if oferta.status != "aceita":
         raise HTTPException(400, "Só ofertas aceitas podem ser concluídas")
 
-    if user_id not in [oferta.id_user, oferta.id_usuario_solicitante]:
+    if user_id not in [oferta.id_usuario_destinatario, oferta.id_usuario_solicitante]:
         raise HTTPException(403, "Não autorizado")
 
     oferta.status = "concluida"
