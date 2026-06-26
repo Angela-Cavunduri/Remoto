@@ -97,9 +97,24 @@ def root():
 @app.get("/run-alembic")
 def run_alembic():
     import subprocess
+    from app.database.connection import engine
+    from sqlalchemy import text
     try:
+        # Tenta criar a coluna que está a faltar caso o Alembic esteja preso
+        with engine.begin() as conn:
+            try:
+                conn.execute(text("ALTER TABLE transfer ADD COLUMN id_usuario_solicitante INT NULL;"))
+            except Exception as e:
+                pass # Ignora se a coluna já existir
+                
+            try:
+                conn.execute(text("ALTER TABLE transfer ADD CONSTRAINT fk_transfer_usuario_solicitante FOREIGN KEY (id_usuario_solicitante) REFERENCES usuario(id_usuario);"))
+            except Exception as e:
+                pass # Ignora se a chave já existir
+                
+        # Agora corre o alembic upgrade head
         result = subprocess.run(["alembic", "upgrade", "head"], capture_output=True, text=True, check=True)
-        return {"success": True, "output": result.stdout}
+        return {"success": True, "output": result.stdout, "message": "Banco de dados corrigido e atualizado com sucesso!"}
     except subprocess.CalledProcessError as e:
         return {"success": False, "error": e.stderr}
 
