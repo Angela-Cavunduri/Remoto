@@ -14,6 +14,17 @@ from app.models import (
 # Criar todas as tabelas na base de dados se não existirem
 # Attempt to create tables; ignore errors if DB is unreachable
 try:
+    from sqlalchemy import text
+    with engine.begin() as conn:
+        try:
+            conn.execute(text("ALTER TABLE transfer ADD COLUMN id_usuario_solicitante INT NULL;"))
+        except Exception:
+            pass
+        try:
+            conn.execute(text("ALTER TABLE transfer ADD CONSTRAINT fk_transfer_usuario_solicitante FOREIGN KEY (id_usuario_solicitante) REFERENCES usuario(id_usuario);"))
+        except Exception:
+            pass
+
     Base.metadata.create_all(bind=engine)
 except Exception as e:
     # Log the error but allow the app to start (useful for dev when DB is offline)
