@@ -1,0 +1,103 @@
+commit 2447f41844e0a42d574d66966e9eb8dccd3b0513
+Author: Ângela Cavunduri <angelacavundurijulcira@gmail.com>
+Date:   Fri Jun 26 17:51:47 2026 +0100
+
+    ainda
+
+diff --git a/app/routes/auth.py b/app/routes/auth.py
+index 04636db..195f8bf 100644
+--- a/app/routes/auth.py
++++ b/app/routes/auth.py
+@@ -25,39 +25,43 @@ def login(
+     db: Session = Depends(get_db)
+ ):
+ 
+-    user = db.query(Usuario).filter(
+-        Usuario.email == form_data.username
+-    ).first()
+-
+-    if not user:
+-        raise HTTPException(
+-            status_code=status.HTTP_401_UNAUTHORIZED,
+-            detail="Credenciais inválidas"
+-        )
+-    if not verificar_senha(
+-        form_data.password,
+-        user.palavra_pass
+-    ):
+-        raise HTTPException(
+-            status_code=status.HTTP_401_UNAUTHORIZED,
+-            detail="Credenciais inválidas"
++    try:
++        # Busca usuário
++        user = db.query(Usuario).filter(
++            Usuario.email == form_data.username
++        ).first()
++
++        if not user:
++            raise HTTPException(
++                status_code=status.HTTP_401_UNAUTHORIZED,
++                detail="Credenciais inválidas"
++            )
++
++        if not verificar_senha(
++            form_data.password,
++            user.palavra_pass
++        ):
++            raise HTTPException(
++                status_code=status.HTTP_401_UNAUTHORIZED,
++                detail="Credenciais inválidas"
++            )
++
++        # Verificação de conta verificada desativada temporariamente (comentada acima)
++
++        access_token = create_access_token(
++            data={"sub": str(user.id_usuario)}
+         )
+-        
+-    if not user.is_verified:
+-        raise HTTPException(
+-            status_code=status.HTTP_403_FORBIDDEN,
+-            detail="Conta não verificada. Verifique a caixa de entrada do seu e-mail."
+-        )
+-
+-    access_token = create_access_token(
+-        data={"sub": str(user.id_usuario)}
+-    )
+-    return {
+-        "access_token": access_token,
+-        "token_type": "bearer",
+-        "id_usuario": user.id_usuario,
+-        "nome": user.nome
+-    }
++        return {
++            "access_token": access_token,
++            "token_type": "bearer",
++            "id_usuario": user.id_usuario,
++            "nome": user.nome
++        }
++    except Exception as e:
++        import logging
++        logger = logging.getLogger("uvicorn.error")
++        logger.exception("Erro inesperado no login")
++        raise HTTPException(status_code=500, detail="Erro interno no servidor")
+ 
+ @router.post("/esqueci-senha")
+ def esqueci_senha(
+diff --git a/app/services/security.py b/app/services/security.py
+index a888420..fff3721 100644
+--- a/app/services/security.py
++++ b/app/services/security.py
+@@ -21,10 +21,9 @@ def hash_senha(senha: str) -> str:
+ 
+ def verificar_senha(password: str, hashed_password: str) -> bool:
+     password = password[:72]
+-    try:
+-        return pwd_context.verify(password, hashed_password)
+-    except UnknownHashError:
++    if not hashed_password:
+         return False
++    return pwd_context.verify(password, hashed_password)
+ 
+ SECRET_KEY = "troca_fácil_super_secreta_123"
+ ALGORITHM = "HS256"

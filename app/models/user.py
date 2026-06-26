@@ -12,6 +12,7 @@ from app.models.exchangeOffer import ExchangeOffer
 from app.models.category import Category
 from app.models.paymentExchange import PaymentExchange
 from app.models.denuncia import Denuncia
+from app.models.service_booking import ServiceBooking
 
 class Usuario(Base):
     __tablename__ = "usuario"
@@ -26,54 +27,31 @@ class Usuario(Base):
     codigo_expiracao = Column(DateTime, nullable=True)
     foto_perfil = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
-    rating_media = Column(Integer, default=0)  # Média simples ou escala de 1 a 5
+    rating_media = Column(Integer, default=0)
 
-    # ── Freemium ────────────────────────────────────────────
-    plano = Column(String(10), default="free", nullable=False)  # "free" | "premium"
-    premium_ate = Column(DateTime, nullable=True)               # Expiração da subscrição
-    stripe_customer_id = Column(String(255), nullable=True)     # Customer ID na Stripe
-    stripe_subscription_id = Column(String(255), nullable=True) # Subscription ID na Stripe
-    # ────────────────────────────────────────────────────────
+    plano = Column(String(10), default="free", nullable=False)
+    premium_ate = Column(DateTime, nullable=True)
+    stripe_customer_id = Column(String(255), nullable=True)
+    stripe_subscription_id = Column(String(255), nullable=True)
 
     user_single = relationship("UserSigle", back_populates="user", uselist=False)
-
-
     company = relationship("Company", back_populates="owner", uselist=False)
-    exchangeoffers = relationship('ExchangeOffer',foreign_keys="ExchangeOffer.id_user" ,back_populates='usuario',cascade="all, delete")
+    
+    exchangeoffers = relationship('ExchangeOffer', foreign_keys="ExchangeOffer.id_user", back_populates='usuario', cascade="all, delete")
+    solicitacoes_feitas = relationship('ExchangeOffer', foreign_keys="ExchangeOffer.id_usuario_solicitante", back_populates='trocas_solicitadas', cascade="all, delete")
+    transfers = relationship('Transfer', foreign_keys="Transfer.id_user", back_populates='usuario', cascade="all, delete")
+    transfers_solicitados = relationship('Transfer', foreign_keys="Transfer.id_usuario_solicitante", back_populates='solicitante', cascade="all, delete")
 
-    # Relacionamento com mensagens recebidas
     messages_received = relationship("Message",foreign_keys="Message.id_receiver",back_populates="receiver")
-
-    # Relacionamento com pagamentos Stripe
     payments = relationship("PaymentExchange", back_populates="usuario", foreign_keys="PaymentExchange.id_user")
 
-    # ── Sistema de Denúncias (Segurança) ──────────────────────
-    is_dangerous = Column(Boolean, default=False, nullable=False) # Se for denunciado, torna-se True
-    
-    denuncias_feitas = relationship(
-        "Denuncia",
-        foreign_keys="Denuncia.id_denunciante",
-        back_populates="denunciante",
-        cascade="all, delete"
-    )
-    
-    denuncias_recebidas = relationship(
-        "Denuncia",
-        foreign_keys="Denuncia.id_denunciado",
-        back_populates="denunciado",
-        cascade="all, delete"
-    )
-    # ──────────────────────────────────────────────────────────
+    is_dangerous = Column(Boolean, default=False, nullable=False)
+    denuncias_feitas = relationship("Denuncia", foreign_keys="Denuncia.id_denunciante", back_populates="denunciante", cascade="all, delete")
+    denuncias_recebidas = relationship("Denuncia", foreign_keys="Denuncia.id_denunciado", back_populates="denunciado", cascade="all, delete")
 
-    # ── Service Booking (Prestação de Serviços) ────────────────
-    pedidos_feitos = relationship(
-        'ServiceBooking',
-        foreign_keys='ServiceBooking.id_cliente',
-        back_populates='cliente'
-    )
-    trabalhos_recebidos = relationship(
-        'ServiceBooking',
-        foreign_keys='ServiceBooking.id_prestador',
-        back_populates='prestador'
-    )
-    # ──────────────────────────────────────────────────────────
+    pedidos_feitos = relationship('ServiceBooking', foreign_keys='ServiceBooking.id_cliente', back_populates='cliente')
+    trabalhos_recebidos = relationship('ServiceBooking', foreign_keys='ServiceBooking.id_prestador', back_populates='prestador')
+    servicos = relationship('Servico', back_populates='usuario', cascade="all, delete")
+    reviews_avaliado = relationship('Review', foreign_keys='Review.id_avaliado', back_populates='avaliado', cascade="all, delete")
+    reviews_avaliador = relationship('Review', foreign_keys='Review.id_avaliador', back_populates='avaliador', cascade="all, delete")
+    messages_sent = relationship("Message", foreign_keys="Message.id_send", back_populates="sender", cascade="all, delete")
