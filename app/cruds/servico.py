@@ -67,6 +67,7 @@ def get_servicos(
     search: str | None = None,
     user_id: int | None = None,
     status: str | None = None,
+    nome: str | None = None,
     skip: int = 0,
     limit: int = 10,
 ) -> list[Servico]:
@@ -99,7 +100,8 @@ def get_servicos(
     # ---------------------------------------------------------------------
     if categoria is not None:
         query = query.filter(Servico.id_category == categoria)
-
+    if nome:
+        query = query.filter(Usuario.nome.ilike(f"%{nome}%"))
     if search:
         query = query.filter(
             (Servico.descricao.ilike(f"%{search}%")) | (Servico.nome.ilike(f"%{search}%"))
@@ -108,6 +110,8 @@ def get_servicos(
         query = query.filter(Servico.id_user == user_id)
     if status:
         query = query.filter(Servico.status == status)
+    # Ordenar por rating do usuário (ranking) decrescente
+    query = query.order_by(Usuario.rating_media.desc())
     return query.offset(skip).limit(limit).all()
 
 def update_servico(db: Session, id_servico: int, dados: ServicoUpdate, user_id: int):

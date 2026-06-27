@@ -24,9 +24,11 @@ def listar_servicos(
     search: Optional[str] = None,
     user_id: Optional[int] = None,
     status: Optional[str] = None,
+    nome: Optional[str] = None,
     skip: int = 0,
     limit: int = 10,
     db: Session = Depends(get_db)
+)::
 ):
     servicos = get_servicos(
         db,
@@ -34,6 +36,7 @@ def listar_servicos(
         search=search,
         user_id=user_id,
         status=status,
+        nome=nome,
         skip=skip,
         limit=limit
     )
