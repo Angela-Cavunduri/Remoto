@@ -99,6 +99,8 @@ def get_servicos(
     # ---------------------------------------------------------------------
     if categoria is not None:
         query = query.filter(Servico.id_category == categoria)
+
+    if search:
         query = query.filter(
             (Servico.descricao.ilike(f"%{search}%")) | (Servico.nome.ilike(f"%{search}%"))
         )
@@ -143,3 +145,11 @@ def delete_servico(db: Session, id_servico: int, user_id: int):
     db.delete(servico)
     db.commit()
     return True
+
+
+def get_servico_by_name(db: Session, nome: str) -> Servico:
+    """Return a single service matching the given name or raise 404."""
+    servico = db.query(Servico).filter(Servico.nome == nome).first()
+    if not servico:
+        raise HTTPException(status_code=404, detail="Serviço não encontrado")
+    return servico
