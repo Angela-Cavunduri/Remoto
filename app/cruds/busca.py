@@ -28,7 +28,7 @@ def buscar_trabalhadores_servicos(
         Servico.nome.label('nome_servico'),
         Servico.descricao,
         Servico.id_category,
-    ).join(Servico, Servico.id_user == Usuario.id_usuario)
+    ).outerjoin(Servico, Servico.id_user == Usuario.id_usuario)
 
     if categoria is not None:
         query = query.filter(Servico.id_category == categoria)
