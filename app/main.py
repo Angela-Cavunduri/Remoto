@@ -46,7 +46,7 @@ from app.routes import (
     payment,
     subscription,
     service_booking,
-
+    busca,
 )
 
 app = FastAPI(
