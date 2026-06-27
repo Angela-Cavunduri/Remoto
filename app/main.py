@@ -100,7 +100,7 @@ app.include_router(subscription.router)
 app.include_router(cleanup_router)
 app.include_router(service_booking.router)
 app.include_router(profile_photos_router, prefix="/profile")
-
+app.include_router(busca.router)
 @app.get("/")
 def root():
     return {"message": "Backend do Troca Fácil está a funcionar"}
