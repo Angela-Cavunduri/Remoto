@@ -28,7 +28,6 @@ def listar_servicos(
     skip: int = 0,
     limit: int = 10,
     db: Session = Depends(get_db)
-)::
 ):
     servicos = get_servicos(
         db,
