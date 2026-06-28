@@ -102,15 +102,25 @@ def get_servicos(
     # ---------------------------------------------------------------------
     if categoria is not None:
         query = query.filter(Servico.id_category == categoria)
-        if nome:
-            query = query.filter(Servico.nome.ilike(f"%{nome}%"))
+    if nome:
+        query = query.filter(Servico.nome.ilike(f"%{nome}%"))
     if search:
-        # Normalizar a string de pesquisa para remover acentos e tornar a busca mais permissiva
-        pattern = f"%{search}%"
+        # Build both raw and accent‑removed patterns to broaden matching
+        import unicodedata
+        from sqlalchemy import or_
+        raw_pattern = f"%{search}%"
+        normalized = unicodedata.normalize('NFD', search)
+        normalized = ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
+        norm_pattern = f"%{normalized}%"
         query = query.filter(
-            (Servico.descricao.ilike(pattern)) |
-            (Servico.nome.ilike(pattern)) |
-            (Usuario.nome.ilike(pattern))
+            or_(
+                Servico.descricao.ilike(raw_pattern),
+                Servico.nome.ilike(raw_pattern),
+                Usuario.nome.ilike(raw_pattern),
+                Servico.descricao.ilike(norm_pattern),
+                Servico.nome.ilike(norm_pattern),
+                Usuario.nome.ilike(norm_pattern),
+            )
         )
     if user_id:
         query = query.filter(Servico.id_user == user_id)
