@@ -36,13 +36,13 @@ def buscar_trabalhadores_servicos(
         .outerjoin(Category, Category.id_category == Servico.id_category)
     )
 
-    if categoria is not None:
-        if isinstance(categoria, int):
-            query = query.filter(Servico.id_category == categoria)
-        else:
-            # filtro por nome da categoria (texto)
-            pattern_cat = f"%{categoria}%"
-            query = query.filter(Category.nome.ilike(pattern_cat))
+    if categoria is not None and (not isinstance(categoria, str) or str(categoria).strip() != ""):
+    if isinstance(categoria, int):
+        query = query.filter(Servico.id_category == categoria)
+    else:
+        # filtro por nome da categoria (texto)
+        pattern_cat = f"%{categoria}%"
+        query = query.filter(Category.nome.ilike(pattern_cat))
 
     if nome_trabalhador:
         # Build patterns: raw and accent‑removed to increase match chances
