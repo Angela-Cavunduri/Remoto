@@ -45,14 +45,18 @@ def buscar_trabalhadores_servicos(
             query = query.filter(Category.nome.ilike(pattern_cat))
 
     if nome_trabalhador:
-        # remover acentos para tornar a busca mais permissiva
+        # Build patterns: raw and accent‑removed to increase match chances
+        import unicodedata
         normalized = unicodedata.normalize('NFD', nome_trabalhador)
         normalized = ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
-        pattern = f"%{normalized}%"
-        # Only consider services whose owners are active (temporarily disabled for debugging)
-        # query = query.filter(Usuario.is_active == True)
-        # Keeping all users regardless of active flag
-        query = query.filter(Usuario.nome.ilike(pattern))
+        pattern_raw = f"%{nome_trabalhador}%"
+        pattern_norm = f"%{normalized}%"
+        query = query.filter(
+            or_(
+                Usuario.nome.ilike(pattern_raw),
+                Usuario.nome.ilike(pattern_norm)
+            )
+        )
 
     if nome_servico:
         pattern = f"%{nome_servico}%"

@@ -106,10 +106,7 @@ def get_servicos(
             query = query.filter(Servico.nome.ilike(f"%{nome}%"))
     if search:
         # Normalizar a string de pesquisa para remover acentos e tornar a busca mais permissiva
-        import unicodedata
-        normalized_search = unicodedata.normalize('NFD', search)
-        normalized_search = ''.join(c for c in normalized_search if unicodedata.category(c) != 'Mn')
-        pattern = f"%{normalized_search}%"
+        pattern = f"%{search}%"
         query = query.filter(
             (Servico.descricao.ilike(pattern)) |
             (Servico.nome.ilike(pattern)) |
