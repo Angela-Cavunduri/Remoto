@@ -92,7 +92,6 @@ def get_servicos(
     query = (
         db.query(Servico)
         .join(Usuario, Servico.id_user == Usuario.id_usuario)
-        .filter(Usuario.is_active == True)
         .options(joinedload(Servico.category), joinedload(Servico.usuario))
     )
     # Order by the user's average rating (rating_media) descending; services without rating will appear last
@@ -106,19 +105,23 @@ def get_servicos(
         if nome:
             query = query.filter(Servico.nome.ilike(f"%{nome}%"))
     if search:
+        # Normalizar a string de pesquisa para remover acentos e tornar a busca mais permissiva
+        import unicodedata
+        normalized_search = unicodedata.normalize('NFD', search)
+        normalized_search = ''.join(c for c in normalized_search if unicodedata.category(c) != 'Mn')
+        pattern = f"%{normalized_search}%"
         query = query.filter(
-            (Servico.descricao.ilike(f"%{search}%")) | (Servico.nome.ilike(f"%{search}%"))
+            (Servico.descricao.ilike(pattern)) |
+            (Servico.nome.ilike(pattern)) |
+            (Usuario.nome.ilike(pattern))
         )
     if user_id:
         query = query.filter(Servico.id_user == user_id)
     if status:
         query = query.filter(Servico.status == status)
     
-    # Ordenar por rating médio decrescente (users with higher avg rating first)
-    query = query.order_by(func.avg(Review.avaliacao).desc().nulls_last())
-    
     results = query.offset(skip).limit(limit).all()
-    return [r[0] for r in results]
+    return results
 
 def update_servico(db: Session, id_servico: int, dados: ServicoUpdate, user_id: int):
     servico = db.query(Servico).filter(Servico.id_servico == id_servico).first()
