@@ -10,9 +10,11 @@ from typing import List
 
 # Modelo de usuário da aplicação
 from app.models.user import Usuario
+from app.models.servico import Servico
 
 # Schema de resposta que a rota /busca utiliza
 from app.schemas.usuario import UsuarioNomeResponse
+from sqlalchemy import func, or_
 
 
 def buscar_todos(
@@ -52,13 +54,16 @@ def buscar_todos(
 
 # Busca usuários por nome (case‑insensitive, parcial)
 def buscar_por_nome(db: Session, nome: str, skip: int = 0, limit: int = 100) -> List[UsuarioNomeResponse]:
-    from sqlalchemy import func
     # Split the search term into individual words (e.g., first and last name)
     tokens = [t.strip().lower() for t in nome.split() if t.strip()]
-    # Build a query that matches *all* tokens in the user's name (case‑insensitive)
-    query = db.query(Usuario)
+    # Build a query that matches all tokens either in user name or service name (case‑insensitive)
+    query = db.query(Usuario).outerjoin(Servico, Servico.id_user == Usuario.id_usuario)
     for token in tokens:
-        query = query.filter(func.lower(Usuario.nome).like(f"%{token}%"))
+        user_cond = func.lower(Usuario.nome).like(f"%{token}%")
+        serv_cond = func.lower(Servico.nome).like(f"%{token}%")
+        query = query.filter(or_(user_cond, serv_cond))
+    # Group by user to avoid duplicates when multiple services match
+    query = query.group_by(Usuario.id_usuario)
     # Order by rating (higher rating first) to prioritize higher‑ranked users
     query = query.order_by(Usuario.rating_media.desc())
     logging.info(f"buscar_por_nome query built with tokens={tokens}")
