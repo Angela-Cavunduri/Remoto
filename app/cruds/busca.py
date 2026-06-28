@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
+import logging
+import unicodedata
 from sqlalchemy import or_, and_
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from app.models.user import Usuario
 from app.models.servico import Servico
@@ -11,7 +13,7 @@ def buscar_trabalhadores_servicos(
     db: Session,
     nome_trabalhador: Optional[str] = None,
     nome_servico: Optional[str] = None,
-    categoria: Optional[int] = None,
+    categoria: Optional[Union[int, str]] = None,
     skip: int = 0,
     limit: int = 10,
 ) -> List[BuscaResponse]:
@@ -29,18 +31,28 @@ def buscar_trabalhadores_servicos(
         Servico.descricao,
         Servico.id_category,
     ).outerjoin(Servico, Servico.id_user == Usuario.id_usuario)
+    .outerjoin(Category, Category.id_category == Servico.id_category)
 
     if categoria is not None:
-        query = query.filter(Servico.id_category == categoria)
+        if isinstance(categoria, int):
+            query = query.filter(Servico.id_category == categoria)
+        else:
+            # filtro por nome da categoria (texto)
+            pattern_cat = f"%{categoria}%"
+            query = query.filter(Category.nome.ilike(pattern_cat))
 
     if nome_trabalhador:
-        pattern = f"%{nome_trabalhador}%"
+        # remover acentos para tornar a busca mais permissiva
+        normalized = unicodedata.normalize('NFD', nome_trabalhador)
+        normalized = ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
+        pattern = f"%{normalized}%"
         query = query.filter(Usuario.nome.ilike(pattern))
 
     if nome_servico:
         pattern = f"%{nome_servico}%"
         query = query.filter(Servico.nome.ilike(pattern))
 
+    logging.info(f"SQL gerado para busca: {str(query)}")
     results = query.offset(skip).limit(limit).all()
     # Converte tuplas para objetos BuscaResponse
     return [

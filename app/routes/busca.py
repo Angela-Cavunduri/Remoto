@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from typing import List, Optional
+from typing import List, Optional, Union
 from sqlalchemy.orm import Session
 
 from app.database.connection import get_db
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/busca", tags=["Busca geral de serviços e trabalhado
 def buscar(
     nome_trabalhador: Optional[str] = None,
     nome_servico: Optional[str] = None,
-    categoria: Optional[int] = None,
+    categoria: Optional[Union[int, str]] = None,
     skip: int = 0,
     limit: int = 10,
     db: Session = Depends(get_db),
