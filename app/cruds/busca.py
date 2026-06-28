@@ -4,6 +4,7 @@
 # Mantém apenas a função que devolve a lista de usuários.
 # --------------------------------------------------------------
 
+import logging
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -51,5 +52,10 @@ def buscar_todos(
 
 # Busca usuários por nome (case‑insensitive, parcial)
 def buscar_por_nome(db: Session, nome: str, skip: int = 0, limit: int = 100) -> List[UsuarioNomeResponse]:
-    query = db.query(Usuario).filter(Usuario.nome.ilike(f"%{nome}%"))
-    return query.offset(skip).limit(limit).all()
+    from sqlalchemy import func
+    lowered = nome.lower()
+    query = db.query(Usuario).filter(func.lower(Usuario.nome).like(f"%{lowered}%"))
+    logging.info(f"buscar_por_nome query: {query}")
+    results = query.offset(skip).limit(limit).all()
+    logging.info(f"buscar_por_nome results count: {len(results)}")
+    return results

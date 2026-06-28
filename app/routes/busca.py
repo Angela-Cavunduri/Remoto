@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, Query
 from typing import List, Optional
 from sqlalchemy.orm import Session
@@ -14,6 +15,7 @@ def buscar_usuarios(
     db: Session = Depends(get_db)
 ):
     """Retorna usuários cadastrados ou filtra por nome se fornecido."""
+    logging.info(f"Busca de usuários chamada com nome={nome}")
     if nome:
         return buscar_por_nome(db, nome)
     return buscar_todos(db)
