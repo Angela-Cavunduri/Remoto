@@ -12,10 +12,10 @@ async def apply_accent_insensitive_collation():
     Uso: apenas em desenvolvimento ou ambiente controlado.
     """
     statements = [
-        "ALTER TABLE Usuario MODIFY nome VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL",
-        "ALTER TABLE Usuario MODIFY email VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL",
-        "ALTER TABLE Servico MODIFY nome VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL",
-        "ALTER TABLE Servico MODIFY descricao TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci"
+        "ALTER TABLE usuario MODIFY nome VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL",
+        "ALTER TABLE usuario MODIFY email VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL",
+        "ALTER TABLE servico MODIFY nome VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL",
+        "ALTER TABLE servico MODIFY descricao TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci"
     ]
     try:
         with engine.begin() as conn:
