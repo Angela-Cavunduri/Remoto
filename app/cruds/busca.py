@@ -53,9 +53,15 @@ def buscar_todos(
 # Busca usuários por nome (case‑insensitive, parcial)
 def buscar_por_nome(db: Session, nome: str, skip: int = 0, limit: int = 100) -> List[UsuarioNomeResponse]:
     from sqlalchemy import func
-    lowered = nome.lower()
-    query = db.query(Usuario).filter(func.lower(Usuario.nome).like(f"%{lowered}%"))
-    logging.info(f"buscar_por_nome query: {query}")
+    # Split the search term into individual words (e.g., first and last name)
+    tokens = [t.strip().lower() for t in nome.split() if t.strip()]
+    # Build a query that matches *all* tokens in the user's name (case‑insensitive)
+    query = db.query(Usuario)
+    for token in tokens:
+        query = query.filter(func.lower(Usuario.nome).like(f"%{token}%"))
+    # Order by rating (higher rating first) to prioritize higher‑ranked users
+    query = query.order_by(Usuario.rating_media.desc())
+    logging.info(f"buscar_por_nome query built with tokens={tokens}")
     results = query.offset(skip).limit(limit).all()
     logging.info(f"buscar_por_nome results count: {len(results)}")
     return results
