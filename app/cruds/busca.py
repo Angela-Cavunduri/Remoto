@@ -1,86 +1,48 @@
+# app/cruds/busca.py
+# --------------------------------------------------------------
+# CRUD simplificado para a rota de busca de usuários.
+# Mantém apenas a função que devolve a lista de usuários.
+# --------------------------------------------------------------
+
 from sqlalchemy.orm import Session
-import logging
-import unicodedata
-from sqlalchemy import or_, and_
-from typing import List, Optional, Union
+from typing import List
 
+# Modelo de usuário da aplicação
 from app.models.user import Usuario
-from app.models.servico import Servico
-from app.models.category import Category
-from app.schemas.busca import BuscaResponse
 
-def buscar_trabalhadores_servicos(
+# Schema de resposta que a rota /busca utiliza
+from app.schemas.usuario import UsuarioNomeResponse
+
+
+def buscar_todos(
     db: Session,
-    nome_trabalhador: Optional[str] = None,
-    nome_servico: Optional[str] = None,
-    categoria: Optional[Union[int, str]] = None,
     skip: int = 0,
-    limit: int = 10,
-) -> List[BuscaResponse]:
-    """Busca trabalhadores (usuários) associados a serviços.
-
-    Cada filtro é aplicado de forma independente; se o parâmetro for ``None``
-    ele será ignorado.
+    limit: int = 100,
+) -> List[UsuarioNomeResponse]:
     """
-    query = (
-        db.query(
-            Usuario.id_usuario,
-            Usuario.nome.label('nome_usuario'),
-            Usuario.foto_perfil,
-            Servico.id_servico,
-            Servico.nome.label('nome_servico'),
-            Servico.descricao,
-            Servico.id_category,
-        )
-        .outerjoin(Servico, Servico.id_user == Usuario.id_usuario)
-        .outerjoin(Category, Category.id_category == Servico.id_category)
+    Retorna todos os usuários cadastrados no banco de dados.
+
+    Parâmetros
+    ----------
+    db : Session
+        Sessão SQLAlchemy ativa.
+    skip : int, opcional
+        Quantidade de registros a pular (paginação). Default = 0.
+    limit : int, opcional
+        Número máximo de usuários a retornar. Default = 100.
+
+    Returns
+    -------
+    List[UsuarioNomeResponse]
+        Lista de objetos `UsuarioNomeResponse` contendo
+        ``id_usuario``, ``nome`` e ``foto_perfil`` (e demais campos
+        opcionais do schema).
+    """
+    # Consulta simples – apenas o modelo de usuário,
+    # sem joins nem filtros adicionais.
+    return (
+        db.query(Usuario)
+        .offset(skip)
+        .limit(limit)
+        .all()
     )
-
-    if categoria is not None and (not isinstance(categoria, str) or str(categoria).strip() != ""):
-        if isinstance(categoria, int):
-            query = query.filter(Servico.id_category == categoria)
-        else:
-            # filtro por nome da categoria (texto)
-            pattern_cat = f"%{categoria}%"
-            query = query.filter(Category.nome.ilike(pattern_cat))
-
-    if nome_trabalhador:
-        # Build patterns: raw and accent‑removed to increase match chances
-        import unicodedata
-        normalized = unicodedata.normalize('NFD', nome_trabalhador)
-        normalized = ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
-        pattern_raw = f"%{nome_trabalhador}%"
-        pattern_norm = f"%{normalized}%"
-        query = query.filter(
-            or_(
-                Usuario.nome.ilike(pattern_raw),
-                Usuario.nome.ilike(pattern_norm)
-            )
-        )
-
-    if nome_servico:
-        pattern = f"%{nome_servico}%"
-        query = query.filter(
-            (Servico.nome.ilike(pattern)) |
-            (Category.nome.ilike(pattern)) |
-            (Servico.descricao.ilike(pattern))
-        )
-    else:
-        # existing logic for nome_servico when not provided
-        pass
-
-    logging.info(f"SQL gerado para busca: {str(query)}")
-    results = query.offset(skip).limit(limit).all()
-    # Converte tuplas para objetos BuscaResponse
-    return [
-        BuscaResponse(
-            id_usuario=row.id_usuario,
-            nome_usuario=row.nome_usuario,
-            foto_perfil=row.foto_perfil,
-            id_servico=row.id_servico,
-            nome_servico=row.nome_servico,
-            descricao=row.descricao,
-            id_categoria=row.id_category,
-        )
-        for row in results
-    ]
