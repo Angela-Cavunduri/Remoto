@@ -22,16 +22,19 @@ def buscar_trabalhadores_servicos(
     Cada filtro é aplicado de forma independente; se o parâmetro for ``None``
     ele será ignorado.
     """
-    query = db.query(
-        Usuario.id_usuario,
-        Usuario.nome.label('nome_usuario'),
-        Usuario.foto_perfil,
-        Servico.id_servico,
-        Servico.nome.label('nome_servico'),
-        Servico.descricao,
-        Servico.id_category,
-    ).outerjoin(Servico, Servico.id_user == Usuario.id_usuario)
-    .outerjoin(Category, Category.id_category == Servico.id_category)
+    query = (
+        db.query(
+            Usuario.id_usuario,
+            Usuario.nome.label('nome_usuario'),
+            Usuario.foto_perfil,
+            Servico.id_servico,
+            Servico.nome.label('nome_servico'),
+            Servico.descricao,
+            Servico.id_category,
+        )
+        .outerjoin(Servico, Servico.id_user == Usuario.id_usuario)
+        .outerjoin(Category, Category.id_category == Servico.id_category)
+    )
 
     if categoria is not None:
         if isinstance(categoria, int):
