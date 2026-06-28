@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database.connection import get_db
 from app.schemas.servico import ServicoCreate, ServicoResponse, ServicoUpdate
-from app.cruds.servico import create_servico, get_servicos, get_servico_by_name, update_servico, delete_servico
+from app.cruds.servico import create_servico, get_servicos, update_servico, delete_servico
 from app.models.user import Usuario
 from app.services.security import get_current_user
 
@@ -39,13 +39,7 @@ def listar_servicos(
         skip=skip,
         limit=limit
     )
-    return servicos  
-@router.get("/nome/{nome}", response_model=ServicoResponse)
-def obter_servico_por_nome(
-    nome: str,
-    db: Session = Depends(get_db)
-):
-    return get_servico_by_name(db, nome)
+    return servicos
 
 
 @router.put("/{id_servico}", response_model=ServicoResponse)

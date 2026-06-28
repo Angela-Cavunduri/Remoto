@@ -49,11 +49,21 @@ def buscar_trabalhadores_servicos(
         normalized = unicodedata.normalize('NFD', nome_trabalhador)
         normalized = ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
         pattern = f"%{normalized}%"
+        # Only consider services whose owners are active (temporarily disabled for debugging)
+        # query = query.filter(Usuario.is_active == True)
+        # Keeping all users regardless of active flag
         query = query.filter(Usuario.nome.ilike(pattern))
 
     if nome_servico:
         pattern = f"%{nome_servico}%"
-        query = query.filter(Servico.nome.ilike(pattern))
+        query = query.filter(
+            (Servico.nome.ilike(pattern)) |
+            (Category.nome.ilike(pattern)) |
+            (Servico.descricao.ilike(pattern))
+        )
+    else:
+        # existing logic for nome_servico when not provided
+        pass
 
     logging.info(f"SQL gerado para busca: {str(query)}")
     results = query.offset(skip).limit(limit).all()

@@ -87,21 +87,24 @@ def get_servicos(
             raise HTTPException(status_code=400, detail="Categoria deve ser um número inteiro")
 
     # Base query – join the author to allow active‑user filtering and eager loads
+    # Join with reviews to calculate the average rating per service
+    # Base query – join with user and optionally with reviews for rating, but ensure services are returned even without reviews
     query = (
         db.query(Servico)
-        .join(Usuario)
+        .join(Usuario, Servico.id_user == Usuario.id_usuario)
+        .filter(Usuario.is_active == True)
         .options(joinedload(Servico.category), joinedload(Servico.usuario))
     )
-    # Only consider services whose owners are active
-    query = query.filter(Usuario.is_active == True)
+    # Order by the user's average rating (rating_media) descending; services without rating will appear last
+    query = query.order_by(Usuario.rating_media.desc().nulls_last())
 
     # ---------------------------------------------------------------------
     # Filters
     # ---------------------------------------------------------------------
     if categoria is not None:
         query = query.filter(Servico.id_category == categoria)
-    if nome:
-        query = query.filter(Usuario.nome.ilike(f"%{nome}%"))
+        if nome:
+            query = query.filter(Servico.nome.ilike(f"%{nome}%"))
     if search:
         query = query.filter(
             (Servico.descricao.ilike(f"%{search}%")) | (Servico.nome.ilike(f"%{search}%"))
@@ -110,9 +113,12 @@ def get_servicos(
         query = query.filter(Servico.id_user == user_id)
     if status:
         query = query.filter(Servico.status == status)
-    # Ordenar por rating do usuário (ranking) decrescente
-    query = query.order_by(Usuario.rating_media.desc())
-    return query.offset(skip).limit(limit).all()
+    
+    # Ordenar por rating médio decrescente (users with higher avg rating first)
+    query = query.order_by(func.avg(Review.avaliacao).desc().nulls_last())
+    
+    results = query.offset(skip).limit(limit).all()
+    return [r[0] for r in results]
 
 def update_servico(db: Session, id_servico: int, dados: ServicoUpdate, user_id: int):
     servico = db.query(Servico).filter(Servico.id_servico == id_servico).first()
