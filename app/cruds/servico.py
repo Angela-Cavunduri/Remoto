@@ -95,7 +95,7 @@ def get_servicos(
         .options(joinedload(Servico.category), joinedload(Servico.usuario))
     )
     # Order by the user's average rating (rating_media) descending; services without rating will appear last
-    query = query.order_by(Usuario.rating_media.desc().nulls_last())
+    query = query.order_by(Usuario.rating_media.desc())
 
     # ---------------------------------------------------------------------
     # Filters
