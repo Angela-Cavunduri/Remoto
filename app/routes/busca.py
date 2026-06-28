@@ -21,6 +21,10 @@ def buscar(
     
     Os filtros são opcionais e são combinados com **AND**.
     """
+    # Normaliza parâmetros vazios ("", None) para None
+    categoria = categoria if (categoria is not None and str(categoria).strip() != "") else None
+    nome_trabalhador = nome_trabalhador if (nome_trabalhador is not None and str(nome_trabalhador).strip() != "") else None
+    nome_servico = nome_servico if (nome_servico is not None and str(nome_servico).strip() != "") else None
     return buscar_trabalhadores_servicos(
         db,
         nome_trabalhador=nome_trabalhador,
