@@ -32,7 +32,7 @@ except Exception as e:
     logging.getLogger(__name__).warning("Database tables not created: %s", e)
 
 from app.routes.profile_photos import router as profile_photos_router
-from app.routes.debug_collation import router as debug_collation_router
+# Debug route import removed per user request
 from app.routes.cleanup_images import router as cleanup_router
 from app.routes import (
     usuario, 
@@ -102,7 +102,7 @@ app.include_router(cleanup_router)
 app.include_router(service_booking.router)
 app.include_router(profile_photos_router, prefix="/profile")
 app.include_router(busca.router)
-app.include_router(debug_collation_router)  # debug route for collation
+# app.include_router(debug_collation_router)  # debug route inclusion removed per request
 @app.get("/")
 def root():
     return {"message": "Backend do Troca Fácil está a funcionar"}
