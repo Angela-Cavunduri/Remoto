@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
+import shutil
 
 # Importação direta das rotas
 from app.database.connection import engine, Base
@@ -73,8 +74,29 @@ app.add_middleware(
 import os
 
 # Ensure upload directory exists on startup
+# Garantir que a pasta de uploads de perfil exista (já está criada acima)
 upload_dir = os.path.join('app', 'static', 'uploads', 'perfil')
 os.makedirs(upload_dir, exist_ok=True)
+
+# --- Startup event: corrigir caminhos de foto que não começam com '/' ---
+@app.on_event("startup")
+def fix_foto_paths():
+    from app.database.connection import SessionLocal
+    from app.models.user import Usuario
+    db = SessionLocal()
+    try:
+        # Selecionar utilizadores cujo caminho não começa com '/static'
+        usuarios = db.query(Usuario).filter(~Usuario.foto_perfil.startswith("/static")).all()
+        for user in usuarios:
+            # Normalizar removendo eventuais barras iniciais extra e prefixando '/'
+            normalized = "/" + user.foto_perfil.lstrip("/")
+            user.foto_perfil = normalized
+            db.add(user)
+        db.commit()
+    finally:
+        db.close()
+
+
 
 # Serve static files (profile photos, etc.)
 app.mount(
@@ -102,6 +124,16 @@ app.include_router(busca.router)
 @app.get("/")
 def root():
     return {"message": "Backend do Troca Fácil está a funcionar"}
+
+# ENDPOINT TEMPORÁRIO DE ADMIN – corrige caminhos de foto no BD
+@app.get("/admin/fix-foto-paths")
+def admin_fix_foto_paths():
+    """Chama a função de correção de caminhos de foto.
+    Útil para executar a correção sem precisar reiniciar o servidor.
+    """
+    fix_foto_paths()  # função definida no startup event
+    return {"status": "caminhos de foto corrigidos"}
+
 
 @app.get("/run-alembic")
 def run_alembic():

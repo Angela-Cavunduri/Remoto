@@ -108,7 +108,7 @@ async def criar_usuario_nif(
     os.makedirs(os.path.dirname(caminho_arquivo), exist_ok=True)
     with open(caminho_arquivo, "wb") as buffer:
         shutil.copyfileobj(foto.file, buffer)
-    foto_url = f"static/uploads/perfil/{nome_ficheiro}"
+    foto_url = f"/static/uploads/perfil/{nome_ficheiro}"
 
     # ── Validação da Password ─────────────────────────────────
     if len(palavra_pass) < 8:
