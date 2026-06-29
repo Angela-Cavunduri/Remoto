@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Form
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Form, UploadFile, File
 from pydantic import EmailStr
 from sqlalchemy.orm import Session
 import re
 import os
 import shutil
+import uuid
 from typing import List, Optional
 from app.services.nif import consultar_nif_externo
 
@@ -85,21 +86,31 @@ async def criar_usuario_nif(
     email: EmailStr = Form(...),
     nif: str = Form(...),
     palavra_pass: str = Form(...),
+    foto: UploadFile = File(...),
     background_tasks: BackgroundTasks = BackgroundTasks(),
     db: Session = Depends(get_db)
 ):
-
-    # ─────────────────────────────────────────────────────────
-
     # Validar e obter dados via Serviço de NIF
     nome, endereco, tipo_nif, nif_validado = consultar_nif_externo(nif)
 
     foto_url = None
     caminho_arquivo = None
 
-    # Removed previous user creation block; will validate password first then create user.
+    # ── Guardar a foto de perfil no disco (obrigatório) ────────
+    if not foto or not foto.filename:
+        raise HTTPException(status_code=400, detail="A foto de perfil é obrigatória.")
 
-        # ── Validação da Password ─────────────────────────────────
+    ext = os.path.splitext(foto.filename)[1].lower()
+    if ext not in (".jpg", ".jpeg", ".png"):
+        raise HTTPException(status_code=400, detail="Formato de imagem não suportado. Use .jpg, .jpeg ou .png.")
+    nome_ficheiro = f"{uuid.uuid4().hex}{ext}"
+    caminho_arquivo = os.path.join("app", "static", "uploads", "perfil", nome_ficheiro)
+    os.makedirs(os.path.dirname(caminho_arquivo), exist_ok=True)
+    with open(caminho_arquivo, "wb") as buffer:
+        shutil.copyfileobj(foto.file, buffer)
+    foto_url = f"static/uploads/perfil/{nome_ficheiro}"
+
+    # ── Validação da Password ─────────────────────────────────
     if len(palavra_pass) < 8:
         raise HTTPException(status_code=400, detail="A palavra-passe deve ter no mínimo 8 caracteres.")
     if len(palavra_pass) > 128:
