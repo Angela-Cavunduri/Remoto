@@ -7,6 +7,10 @@ from dotenv import load_dotenv
 # Carrega .env se existir, mas não falha se não houver
 load_dotenv(override=True)
 
+# Definir valores padrão para host e porta MySQL (usado também quando o fallback SQLite está ativo)
+MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
+MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
+
 # Prioriza URL completa se fornecida (ex.: para cloud/Aiven) ou SQLite para testes
 USE_SQLITE = os.getenv("USE_SQLITE", "false").lower() == "true"
 if USE_SQLITE:
@@ -31,6 +35,7 @@ else:
             DATABASE_URL = f"mysql+mysqlconnector://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
 
 # Detecta se o host é um provedor cloud (ex.: Aiven) que requer SSL
+# Quando usando SQLite, o host padrão é localhost e não requer SSL
 is_cloud = MYSQL_HOST not in ("localhost", "127.0.0.1")
 
 # Adjust SSL handling based on environment variable
