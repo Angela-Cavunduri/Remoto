@@ -1,4 +1,4 @@
-﻿fastapi
+fastapi
 uvicorn
 sqlalchemy
 mysql-connector-python
@@ -6,7 +6,7 @@ python-dotenv
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
 python-jose[cryptography]
-stripe
+
 python-multipart
 alembic
 pydantic[email]

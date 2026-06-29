@@ -22,7 +22,7 @@ class PlanoEstado(BaseModel):
     plano: str                          # "free" ou "premium"
     mostra_publicidade: bool            # True se for free
     premium_ate: Optional[datetime]     # None se for free
-    stripe_subscription_id: Optional[str]
+    # stripe_subscription_id: Optional[str]
 
     class Config:
         from_attributes = True

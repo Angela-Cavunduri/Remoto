@@ -7,8 +7,8 @@ import os
 # Importação direta das rotas
 from app.database.connection import engine, Base
 from app.models import (
-    user, servico, category, company, denuncia, exchangeOffer, 
-    message, paymentExchange, review, transfer, user_sigle, service_booking
+    user, servico, category, company, denuncia, exchangeOffer,
+    message, review, transfer, user_sigle, service_booking
 )
 
 # Criar todas as tabelas na base de dados se não existirem
@@ -44,8 +44,6 @@ from app.routes import (
     message, 
     transfer,
     review,
-    payment,
-    subscription,
     service_booking,
     busca,
 )
@@ -67,6 +65,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://127.0.0.1:8080",
     ], 
+    allow_origin_regex="https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -95,8 +94,6 @@ app.include_router(exchangeoffer.router)
 app.include_router(message.router)
 app.include_router(transfer.router)
 app.include_router(review.router)
-app.include_router(payment.router)
-app.include_router(subscription.router)
 app.include_router(cleanup_router)
 app.include_router(service_booking.router)
 app.include_router(profile_photos_router, prefix="/profile")

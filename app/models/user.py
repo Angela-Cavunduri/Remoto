@@ -10,7 +10,7 @@ from app.models.review import Review
 from app.models.message import Message
 from app.models.exchangeOffer import ExchangeOffer
 from app.models.category import Category
-from app.models.paymentExchange import PaymentExchange
+
 from app.models.denuncia import Denuncia
 from app.models.service_booking import ServiceBooking
 
@@ -31,8 +31,7 @@ class Usuario(Base):
 
     plano = Column(String(10), default="free", nullable=False)
     premium_ate = Column(DateTime, nullable=True)
-    stripe_customer_id = Column(String(255), nullable=True)
-    stripe_subscription_id = Column(String(255), nullable=True)
+
 
     user_single = relationship("UserSigle", back_populates="user", uselist=False)
     company = relationship("Company", back_populates="owner", uselist=False)
@@ -43,7 +42,7 @@ class Usuario(Base):
     transfers_solicitados = relationship('Transfer', foreign_keys="Transfer.id_usuario_solicitante", back_populates='solicitante', cascade="all, delete")
 
     messages_received = relationship("Message",foreign_keys="Message.id_receiver",back_populates="receiver")
-    payments = relationship("PaymentExchange", back_populates="usuario", foreign_keys="PaymentExchange.id_user")
+
 
     is_dangerous = Column(Boolean, default=False, nullable=False)
     denuncias_feitas = relationship("Denuncia", foreign_keys="Denuncia.id_denunciante", back_populates="denunciante", cascade="all, delete")

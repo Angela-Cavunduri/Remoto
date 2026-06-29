@@ -16,7 +16,7 @@ def verificar_premium_expirado(db: Session, user: Usuario) -> Usuario:
     if user.plano == "premium" and user.premium_ate:
         if datetime.utcnow() > user.premium_ate:
             user.plano = "free"
-            user.stripe_subscription_id = None
+            # Stripe subscription field removed
             db.commit()
             db.refresh(user)
     return user
@@ -49,5 +49,5 @@ def obter_estado_plano(db: Session, user: Usuario) -> dict:
         "plano": user.plano,
         "mostra_publicidade": user.plano == "free",
         "premium_ate": user.premium_ate,
-        "stripe_subscription_id": user.stripe_subscription_id,
+        # "stripe_subscription_id": user.stripe_subscription_id,
     }

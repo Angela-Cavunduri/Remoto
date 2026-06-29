@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
 from app.models.user import Usuario
+from app.models.user_sigle import UserSigle
 import os
 from app.models.company import Company
 from app.models.servico import Servico
