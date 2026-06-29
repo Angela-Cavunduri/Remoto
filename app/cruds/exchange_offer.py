@@ -199,11 +199,24 @@ def concluir_oferta(db: Session, offer_id: int, user_id: int):
     if user_id not in [oferta.id_user, oferta.id_usuario_solicitante]:
         raise HTTPException(403, "Não autorizado")
 
+    # Atualiza o estado da oferta para concluída
     oferta.status = "concluida"
+
+    # Cria o recibo (Transfer) automático com estado "concluído"
+    from app.models.transfer import Transfer
+    novo_recibo = Transfer(
+        id_user=oferta.id_user,
+        id_usuario_solicitante=oferta.id_usuario_solicitante,
+        id_exchangeoffer=oferta.id_offer,
+        estados="concluído",
+        data_datroca=datetime.utcnow()
+    )
+    db.add(novo_recibo)
 
     db.commit()
     db.refresh(oferta)
-
+    # Também refresh do novo recibo (caso o frontend queira usar o objeto retornado)
+    db.refresh(novo_recibo)
     return oferta
 
 def get_trocas(db: Session, user_id: int):
