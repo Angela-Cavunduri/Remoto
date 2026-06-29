@@ -32,11 +32,7 @@ class ExchangeOffer(Base):
         overlaps="ofertas_recebidas"
     )
 
-    payments = relationship(
-        "PaymentExchange",
-        back_populates="exchange_offer",
-        cascade="all, delete"
-    )
+    # payments relationship removed (PaymentExchange no longer used)
 
     transfers = relationship(
         "Transfer",
