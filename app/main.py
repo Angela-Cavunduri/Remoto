@@ -86,12 +86,12 @@ def fix_foto_paths():
     db = SessionLocal()
     try:
         # Selecionar utilizadores cujo caminho não começa com '/static'
-        usuarios = db.query(Usuario).filter(~Usuario.foto_perfil.startswith("/static")).all()
+        usuarios = db.query(Usuario).all()
         for user in usuarios:
-            # Normalizar removendo eventuais barras iniciais extra e prefixando '/'
-            normalized = "/" + user.foto_perfil.lstrip("/")
-            user.foto_perfil = normalized
-            db.add(user)
+            if user.foto_perfil:
+                nome_ficheiro = user.foto_perfil.split("/")[-1]
+                user.foto_perfil = f"/static/uploads/perfil/{nome_ficheiro}"
+                db.add(user)
         db.commit()
     finally:
         db.close()
