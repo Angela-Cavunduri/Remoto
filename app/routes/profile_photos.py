@@ -4,7 +4,7 @@ import os
 
 router = APIRouter()
 
-@router.get("/foto/{filename}")
+@router.get("/foto/{filename:path}")
 def get_foto(filename: str):
     """Serve a profile photo stored in app/static/uploads/perfil/<filename>.
 

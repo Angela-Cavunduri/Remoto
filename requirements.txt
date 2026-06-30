@@ -13,3 +13,4 @@ pydantic[email]
 requests
 email-validator
 websockets
+cloudinary

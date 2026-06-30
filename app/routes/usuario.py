@@ -5,6 +5,7 @@ import re
 import os
 import shutil
 import uuid
+import cloudinary.uploader
 from typing import List, Optional
 from app.services.nif import consultar_nif_externo
 
@@ -96,19 +97,20 @@ async def criar_usuario_nif(
     foto_url = None
     caminho_arquivo = None
 
-    # ── Guardar a foto de perfil no disco (obrigatório) ────────
+    # ── Guardar a foto de perfil no Cloudinary (obrigatório) ────────
     if not foto or not foto.filename:
         raise HTTPException(status_code=400, detail="A foto de perfil é obrigatória.")
 
     ext = os.path.splitext(foto.filename)[1].lower()
     if ext not in (".jpg", ".jpeg", ".png"):
         raise HTTPException(status_code=400, detail="Formato de imagem não suportado. Use .jpg, .jpeg ou .png.")
-    nome_ficheiro = f"{uuid.uuid4().hex}{ext}"
-    caminho_arquivo = os.path.join("app", "static", "uploads", "perfil", nome_ficheiro)
-    os.makedirs(os.path.dirname(caminho_arquivo), exist_ok=True)
-    with open(caminho_arquivo, "wb") as buffer:
-        shutil.copyfileobj(foto.file, buffer)
-    foto_url = f"/static/uploads/perfil/{nome_ficheiro}"
+    
+    try:
+        # Enviar o arquivo diretamente da memória para o Cloudinary
+        upload_result = cloudinary.uploader.upload(foto.file, folder="troca_facil_perfil")
+        foto_url = upload_result.get("secure_url")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao fazer upload da imagem para a nuvem: {str(e)}")
 
     # ── Validação da Password ─────────────────────────────────
     if len(palavra_pass) < 8:
@@ -150,9 +152,6 @@ async def criar_usuario_nif(
 
         return user_dict
     except ValueError as e:
-        # Se falhar a criação do usuário, apagamos a foto se existir
-        if caminho_arquivo and os.path.exists(caminho_arquivo):
-            os.remove(caminho_arquivo)
         raise HTTPException(status_code=400, detail=f"ERRO RENDER: {str(e)}")
 
 # 2. Verificação de Conta
