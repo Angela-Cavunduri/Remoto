@@ -27,6 +27,16 @@ router = APIRouter(
 )
 
 # 0. Estatísticas Públicas (Para todos verem o crescimento do site)
+@router.get("/fix-db")
+def fix_database_endereco(db: Session = Depends(get_db)):
+    from sqlalchemy import text
+    try:
+        db.execute(text("ALTER TABLE usuario MODIFY COLUMN endereco VARCHAR(255) NOT NULL;"))
+        db.commit()
+        return {"message": "Coluna 'endereco' aumentada para 255 caracteres com sucesso!"}
+    except Exception as e:
+        return {"error": str(e)}
+
 @router.get("/estatisticas")
 def ver_estatisticas(db: Session = Depends(get_db)):
     from app.models.servico import Servico
