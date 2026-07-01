@@ -19,6 +19,14 @@ class UsuarioNomeResponse(BaseModel):
     class Config:
         from_attributes = True
 
+from app.schemas.review import ReviewDetailResponse
+from typing import List
+
+class UsuarioListaDetalhado(UsuarioNomeResponse):
+    total_trocas: int = 0
+    total_prestacoes: int = 0
+    avaliacoes: List[ReviewDetailResponse] = []
+
 class UsuarioRankingResponse(BaseModel):
     nome: str
     foto_perfil: Optional[str] = None

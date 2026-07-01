@@ -11,7 +11,7 @@ from app.services.nif import consultar_nif_externo
 
 from app.database.connection import get_db
 from app.models.user import Usuario
-from app.schemas.usuario import UsuarioNifCreate, UsuarioResponse, UsuarioUpdate, UsuarioVerificar, UsuarioReenviarCodigo, UsuarioNomeResponse, UsuarioRankingResponse, UsuarioPerfilDetalhado
+from app.schemas.usuario import UsuarioNifCreate, UsuarioResponse, UsuarioUpdate, UsuarioVerificar, UsuarioReenviarCodigo, UsuarioNomeResponse, UsuarioRankingResponse, UsuarioPerfilDetalhado, UsuarioListaDetalhado
 from app.cruds.usuario import (
     create_usuario_com_nif,
     atualizar_usuario,
@@ -173,9 +173,62 @@ def reenviar_codigo(dados: UsuarioReenviarCodigo, background_tasks: BackgroundTa
         raise HTTPException(status_code=400, detail=str(e))
 
 # 4. Listar Utilizadores da Plataforma (público, sem dados sensíveis)
-@router.get("/", response_model=List[UsuarioNomeResponse])
+@router.get("/", response_model=List[UsuarioListaDetalhado])
 def listar_usuarios(db: Session = Depends(get_db)):
-    return db.query(Usuario).all()
+    from app.models.exchangeOffer import ExchangeOffer
+    from app.models.service_booking import ServiceBooking
+    from app.models.review import Review
+    from sqlalchemy import func
+    from sqlalchemy.orm import joinedload
+
+    usuarios = db.query(Usuario).all()
+    resultado = []
+
+    for user in usuarios:
+        # Contar trocas concluídas
+        total_trocas = db.query(func.count(ExchangeOffer.id_offer)).filter(
+            ((ExchangeOffer.id_user == user.id_usuario) | 
+                 (ExchangeOffer.id_usuario_solicitante == user.id_usuario)),
+            ExchangeOffer.status == "aceita"
+        ).scalar() or 0
+
+        # Contar prestações concluídas
+        total_prestacoes = db.query(func.count(ServiceBooking.id_pedido)).filter(
+            ServiceBooking.id_prestador == user.id_usuario,
+            ServiceBooking.status == "concluido"
+        ).scalar() or 0
+
+        # Obter avaliações detalhadas
+        reviews = db.query(Review).options(joinedload(Review.avaliador)).filter(
+            Review.id_avaliado == user.id_usuario
+        ).all()
+
+        avaliacoes_list = []
+        for r in reviews:
+            avaliacoes_list.append({
+                "id_review": r.id_review,
+                "avaliacao": r.avaliacao,
+                "conteudo": r.conteudo,
+                "data_avaliacao": r.data_avaliacao,
+                "avaliador": {
+                    "id_usuario": r.avaliador.id_usuario,
+                    "nome": r.avaliador.nome,
+                    "foto_perfil": r.avaliador.foto_perfil
+                }
+            })
+
+        resultado.append({
+            "id_usuario": user.id_usuario,
+            "nome": user.nome,
+            "foto_perfil": user.foto_perfil,
+            "rating_media": user.rating_media,
+            "is_dangerous": user.is_dangerous,
+            "total_trocas": total_trocas,
+            "total_prestacoes": total_prestacoes,
+            "avaliacoes": avaliacoes_list
+        })
+
+    return resultado
 
 # 4. Perfil do Usuário Logado
 @router.get("/me", response_model=UsuarioPerfilDetalhado)
