@@ -43,6 +43,14 @@ class UsuarioResponse(BaseModel):
     class Config:
         from_attributes = True
 
+from app.schemas.review import ReviewDetailResponse
+from typing import List
+
+class UsuarioPerfilDetalhado(UsuarioResponse):
+    total_trocas: int = 0
+    total_prestacoes: int = 0
+    avaliacoes: List[ReviewDetailResponse] = []
+
 class UsuarioLogin(BaseModel):
     palavra_pass:str
     email:EmailStr
