@@ -149,12 +149,45 @@ def root():
 # ENDPOINT TEMPORÁRIO DE ADMIN – corrige caminhos de foto no BD
 @app.get("/admin/fix-foto-paths")
 def admin_fix_foto_paths():
-    """Chama a função de correção de caminhos de foto.
-    Útil para executar a correção sem precisar reiniciar o servidor.
-    """
-    fix_foto_paths()  # função definida no startup event
+    """Chama a função de correção de caminhos de foto."""
+    fix_foto_paths()
     return {"status": "caminhos de foto corrigidos"}
 
+@app.get("/admin/organize-categories")
+def admin_organize_categories():
+    from app.database.connection import engine
+    from sqlalchemy import text
+    queries = [
+        "UPDATE category SET nome = 'Tecnologia e Informática' WHERE id_category = 1;",
+        "UPDATE servico SET id_category = 1 WHERE id_category IN (2, 6, 16, 18);",
+        "UPDATE category SET nome = 'Reparações e Manutenção' WHERE id_category = 3;",
+        "UPDATE servico SET id_category = 3 WHERE id_category IN (4, 5, 9, 11);",
+        "UPDATE category SET nome = 'Limpeza e Organização' WHERE id_category = 7;",
+        "UPDATE servico SET id_category = 7 WHERE id_category IN (19);",
+        "UPDATE category SET nome = 'Educação e Aulas Particulares' WHERE id_category = 8;",
+        "UPDATE category SET nome = 'Casa e Jardinagem' WHERE id_category = 12;",
+        "UPDATE category SET nome = 'Fotografia e Vídeo' WHERE id_category = 10;",
+        "UPDATE category SET nome = 'Cuidados Infantis' WHERE id_category = 17;",
+        "UPDATE category SET nome = 'Consultoria e Negócios' WHERE id_category = 15;",
+        "UPDATE category SET nome = 'Saúde, Bem-estar e Fitness' WHERE id_category = 14;",
+        "UPDATE category SET nome = 'Moda, Beleza e Estética' WHERE id_category = 13;",
+        "UPDATE category SET nome = 'Design e Criatividade' WHERE id_category = 2;",
+        "UPDATE category SET nome = 'Transporte e Mudanças' WHERE id_category = 4;",
+        "UPDATE category SET nome = 'Cuidados a Idosos' WHERE id_category = 5;",
+        "UPDATE category SET nome = 'Cuidados com Animais' WHERE id_category = 6;",
+        "UPDATE category SET nome = 'Alimentação e Catering' WHERE id_category = 9;",
+        "UPDATE category SET nome = 'Música e Entretenimento' WHERE id_category = 11;",
+        "UPDATE category SET nome = 'Entregas e Recados' WHERE id_category = 16;",
+        "UPDATE category SET nome = 'Escrita, Tradução e Revisão de Textos' WHERE id_category = 18;",
+        "DELETE FROM category WHERE id_category IN (19);"
+    ]
+    try:
+        with engine.begin() as conn:
+            for q in queries:
+                conn.execute(text(q))
+        return {"status": "Categorias reorganizadas com sucesso! A base de dados de produção está limpa."}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/run-alembic")
 def run_alembic():

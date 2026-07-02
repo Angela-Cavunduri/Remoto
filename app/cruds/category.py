@@ -56,21 +56,24 @@ def delete_category(db: Session, id_category: int):
 
 def seed_categories(db: Session):
     categorias = [
-        "Canalização",
-        "Electricidade",
-        "Carpintaria",
-        "Web Design",
-        "Limpeza Doméstica",
-        "Aulas de Inglês",
-        "Mecânica Automóvel",
-        "Fotografia",
-        "Pintura",
-        "Jardinagem",
-        "Costura / Alfaiataria",
-        "Personal Trainer",
-        "Consultoria Jurídica",
-        "Reparação de Computadores",
-        "Babysitting"
+        "Tecnologia e Informática",
+        "Casa e Jardinagem",
+        "Reparações e Manutenção",
+        "Design e Criatividade",
+        "Educação e Aulas Particulares",
+        "Transporte e Mudanças",
+        "Limpeza e Organização",
+        "Cuidados Infantis",
+        "Cuidados a Idosos",
+        "Cuidados com Animais",
+        "Alimentação e Catering",
+        "Fotografia e Vídeo",
+        "Música e Entretenimento",
+        "Consultoria e Negócios",
+        "Saúde, Bem-estar e Fitness",
+        "Moda, Beleza e Estética",
+        "Entregas e Recados",
+        "Escrita, Tradução e Revisão de Textos"
     ]
 
     for nome in categorias:
