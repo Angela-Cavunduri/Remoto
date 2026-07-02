@@ -162,7 +162,9 @@ async def criar_usuario_nif(
 
         return user_dict
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"ERRO RENDER: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro interno ao cadastrar: Verifique os dados ou contacte o suporte. Detalhe técnico: {str(e)}")
 
 # 2. Verificação de Conta
 @router.post("/verificar", response_model=dict)

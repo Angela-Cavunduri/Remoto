@@ -63,6 +63,19 @@ app = FastAPI(
     version="1.0.0"
 )
 
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    errors = exc.errors()
+    msg = "Erro de preenchimento. Verifique os campos."
+    if errors:
+        campo = str(errors[0].get('loc', [''])[-1])
+        msg_erro = errors[0].get('msg', 'inválido')
+        msg = f"Erro no campo '{campo}': {msg_erro}"
+    return JSONResponse(status_code=422, content={"detail": msg})
+
 # Configuração de CORS
 app.add_middleware(
     CORSMiddleware,
