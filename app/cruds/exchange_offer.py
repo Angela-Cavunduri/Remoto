@@ -25,21 +25,7 @@ def create_exchange_offer(
     if user.nome == "Pendente de Validação":
         raise HTTPException(403, "A sua conta está Pendente de Validação pela administração. Não pode fazer trocas até que os seus dados sejam validados.")
 
-    # 2. Verificar limitações do plano Freemium
-    if user.plano != "premium":
-        inicio_dia = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-        # Conta todas as propostas de troca criadas por este utilizador hoje (independentemente do status)
-        trocas_hoje = db.query(ExchangeOffer).filter(
-            ExchangeOffer.id_usuario_solicitante == user_id,
-            ExchangeOffer.data_criacao >= inicio_dia
-        ).count()
-        if trocas_hoje >= 2:
-            raise HTTPException(
-                status_code=403,
-                detail="Limite de 2 propostas de troca por dia atingido para o plano Free. Faça upgrade para Premium para propor trocas ilimitadas!"
-            )
-
-    # 3. Verificar se o utilizador tem trocas pendentes ou aceites que ainda não foram concluídas
+    # 2. Verificar se o utilizador tem trocas pendentes ou aceites que ainda não foram concluídas
     troca_ativa = db.query(ExchangeOffer).filter(
         (ExchangeOffer.id_usuario_solicitante == user_id) | (ExchangeOffer.id_user == user_id),
         ExchangeOffer.status == "aceita"
