@@ -190,34 +190,59 @@ def listar_usuarios(db: Session = Depends(get_db)):
     from app.models.exchangeOffer import ExchangeOffer
     from app.models.service_booking import ServiceBooking
     from app.models.review import Review
-    from sqlalchemy import func
-    from sqlalchemy.orm import joinedload
+    from sqlalchemy import func, case
 
+    # 1. Buscar todos os utilizadores
     usuarios = db.query(Usuario).all()
-    resultado = []
+    if not usuarios:
+        return []
 
-    for user in usuarios:
-        # Contar trocas concluídas
-        total_trocas = db.query(func.count(ExchangeOffer.id_offer)).filter(
-            ((ExchangeOffer.id_user == user.id_usuario) | 
-                 (ExchangeOffer.id_usuario_solicitante == user.id_usuario)),
-            ExchangeOffer.status == "aceita"
-        ).scalar() or 0
+    ids = [u.id_usuario for u in usuarios]
 
-        # Contar prestações concluídas
-        total_prestacoes = db.query(func.count(ServiceBooking.id_pedido)).filter(
-            ServiceBooking.id_prestador == user.id_usuario,
-            ServiceBooking.status == "concluido"
-        ).scalar() or 0
+    # 2. Contar trocas aceites por utilizador — 1 query para todos
+    trocas_rows = db.query(
+        func.coalesce(ExchangeOffer.id_user, ExchangeOffer.id_usuario_solicitante).label("uid"),
+        func.count(ExchangeOffer.id_offer).label("total")
+    ).filter(
+        ExchangeOffer.status == "aceita",
+        (ExchangeOffer.id_user.in_(ids)) | (ExchangeOffer.id_usuario_solicitante.in_(ids))
+    ).group_by(func.coalesce(ExchangeOffer.id_user, ExchangeOffer.id_usuario_solicitante)).all()
 
-        # Obter avaliações detalhadas
-        reviews = db.query(Review).options(joinedload(Review.avaliador)).filter(
-            Review.id_avaliado == user.id_usuario
-        ).all()
+    # Agregar manualmente: cada oferta conta para ambos os lados
+    trocas_por_user: dict[int, int] = {uid: 0 for uid in ids}
+    for row in db.query(
+        ExchangeOffer.id_user,
+        ExchangeOffer.id_usuario_solicitante,
+    ).filter(
+        ExchangeOffer.status == "aceita",
+        (ExchangeOffer.id_user.in_(ids)) | (ExchangeOffer.id_usuario_solicitante.in_(ids))
+    ).all():
+        if row.id_user in trocas_por_user:
+            trocas_por_user[row.id_user] = trocas_por_user.get(row.id_user, 0) + 1
+        if row.id_usuario_solicitante in trocas_por_user:
+            trocas_por_user[row.id_usuario_solicitante] = trocas_por_user.get(row.id_usuario_solicitante, 0) + 1
 
-        avaliacoes_list = []
-        for r in reviews:
-            avaliacoes_list.append({
+    # 3. Contar prestações concluídas por utilizador — 1 query para todos
+    prestacoes_por_user: dict[int, int] = {uid: 0 for uid in ids}
+    for row in db.query(
+        ServiceBooking.id_prestador,
+        func.count(ServiceBooking.id_pedido).label("total")
+    ).filter(
+        ServiceBooking.id_prestador.in_(ids),
+        ServiceBooking.status == "concluido"
+    ).group_by(ServiceBooking.id_prestador).all():
+        prestacoes_por_user[row.id_prestador] = row.total
+
+    # 4. Buscar todas as reviews de todos os utilizadores — 1 query para todos
+    from sqlalchemy.orm import joinedload
+    todas_reviews = db.query(Review).options(
+        joinedload(Review.avaliador)
+    ).filter(Review.id_avaliado.in_(ids)).all()
+
+    reviews_por_user: dict[int, list] = {uid: [] for uid in ids}
+    for r in todas_reviews:
+        if r.avaliador:
+            reviews_por_user[r.id_avaliado].append({
                 "id_review": r.id_review,
                 "avaliacao": r.avaliacao,
                 "conteudo": r.conteudo,
@@ -229,15 +254,19 @@ def listar_usuarios(db: Session = Depends(get_db)):
                 }
             })
 
+    # 5. Montar resultado final sem mais queries
+    resultado = []
+    for user in usuarios:
+        uid = user.id_usuario
         resultado.append({
-            "id_usuario": user.id_usuario,
+            "id_usuario": uid,
             "nome": user.nome,
             "foto_perfil": user.foto_perfil,
             "rating_media": user.rating_media,
             "is_dangerous": user.is_dangerous,
-            "total_trocas": total_trocas,
-            "total_prestacoes": total_prestacoes,
-            "avaliacoes": avaliacoes_list
+            "total_trocas": trocas_por_user.get(uid, 0),
+            "total_prestacoes": prestacoes_por_user.get(uid, 0),
+            "avaliacoes": reviews_por_user.get(uid, [])
         })
 
     return resultado
