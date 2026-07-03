@@ -60,36 +60,53 @@ def ver_ranking_publico(db: Session = Depends(get_db)):
     from app.models.service_booking import ServiceBooking
     from sqlalchemy import func
 
-    # Buscar os top 10 utilizadores ativos ordenados por avaliação
+    # 1. Buscar top 10 utilizadores activos — 1 query
     usuarios = db.query(Usuario).filter(
         Usuario.is_active == True
     ).order_by(Usuario.rating_media.desc()).limit(10).all()
 
-    resultado = []
-    for user in usuarios:
-        # Contar trocas concluídas (como dono ou solicitante)
-        total_trocas = db.query(func.count(ExchangeOffer.id_offer)).filter(
-            ((ExchangeOffer.id_user == user.id_usuario) | 
-                 (ExchangeOffer.id_usuario_solicitante == user.id_usuario)),
-            ExchangeOffer.status == "aceita"
-        ).scalar() or 0
+    if not usuarios:
+        return []
 
-        # Contar prestações concluídas (como prestador)
-        total_prestacoes = db.query(func.count(ServiceBooking.id_pedido)).filter(
-            ServiceBooking.id_prestador == user.id_usuario,
-            ServiceBooking.status == "concluido"
-        ).scalar() or 0
+    ids = [u.id_usuario for u in usuarios]
 
-        resultado.append(UsuarioRankingResponse(
-            nome=user.nome,
-            foto_perfil=user.foto_perfil,
-            rating_media=user.rating_media,
-            is_dangerous=user.is_dangerous,
-            total_trocas=total_trocas,
-            total_prestacoes=total_prestacoes
-        ))
+    # 2. Contar trocas aceites para todos de uma vez — 1 query
+    trocas_por_user: dict[int, int] = {uid: 0 for uid in ids}
+    for row in db.query(
+        ExchangeOffer.id_user,
+        ExchangeOffer.id_usuario_solicitante,
+    ).filter(
+        ExchangeOffer.status == "aceita",
+        (ExchangeOffer.id_user.in_(ids)) | (ExchangeOffer.id_usuario_solicitante.in_(ids))
+    ).all():
+        if row.id_user in trocas_por_user:
+            trocas_por_user[row.id_user] += 1
+        if row.id_usuario_solicitante in trocas_por_user:
+            trocas_por_user[row.id_usuario_solicitante] += 1
 
-    return resultado
+    # 3. Contar prestações concluídas para todos de uma vez — 1 query
+    prestacoes_por_user: dict[int, int] = {uid: 0 for uid in ids}
+    for row in db.query(
+        ServiceBooking.id_prestador,
+        func.count(ServiceBooking.id_pedido).label("total")
+    ).filter(
+        ServiceBooking.id_prestador.in_(ids),
+        ServiceBooking.status == "concluido"
+    ).group_by(ServiceBooking.id_prestador).all():
+        prestacoes_por_user[row.id_prestador] = row.total
+
+    # 4. Montar resultado sem mais queries
+    return [
+        UsuarioRankingResponse(
+            nome=u.nome,
+            foto_perfil=u.foto_perfil,
+            rating_media=u.rating_media,
+            is_dangerous=u.is_dangerous,
+            total_trocas=trocas_por_user.get(u.id_usuario, 0),
+            total_prestacoes=prestacoes_por_user.get(u.id_usuario, 0)
+        )
+        for u in usuarios
+    ]
 
 # 1. Cadastro Simplificado com NIF (3 campos: email, nif, password + foto)
 @router.post("/", response_model=UsuarioResponse)
