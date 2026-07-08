@@ -76,7 +76,7 @@ def ver_ranking_publico(db: Session = Depends(get_db)):
         ExchangeOffer.id_user,
         ExchangeOffer.id_usuario_solicitante,
     ).filter(
-        ExchangeOffer.status == "aceita",
+        ExchangeOffer.status.in_(["aceita", "concluida"]),
         (ExchangeOffer.id_user.in_(ids)) | (ExchangeOffer.id_usuario_solicitante.in_(ids))
     ).all():
         if row.id_user in trocas_por_user:
@@ -221,7 +221,7 @@ def listar_usuarios(db: Session = Depends(get_db)):
         func.coalesce(ExchangeOffer.id_user, ExchangeOffer.id_usuario_solicitante).label("uid"),
         func.count(ExchangeOffer.id_offer).label("total")
     ).filter(
-        ExchangeOffer.status == "aceita",
+        ExchangeOffer.status.in_(["aceita", "concluida"]),
         (ExchangeOffer.id_user.in_(ids)) | (ExchangeOffer.id_usuario_solicitante.in_(ids))
     ).group_by(func.coalesce(ExchangeOffer.id_user, ExchangeOffer.id_usuario_solicitante)).all()
 
@@ -231,7 +231,7 @@ def listar_usuarios(db: Session = Depends(get_db)):
         ExchangeOffer.id_user,
         ExchangeOffer.id_usuario_solicitante,
     ).filter(
-        ExchangeOffer.status == "aceita",
+        ExchangeOffer.status.in_(["aceita", "concluida"]),
         (ExchangeOffer.id_user.in_(ids)) | (ExchangeOffer.id_usuario_solicitante.in_(ids))
     ).all():
         if row.id_user in trocas_por_user:
@@ -288,6 +288,70 @@ def listar_usuarios(db: Session = Depends(get_db)):
 
     return resultado
 
+# 3.1 Obter Perfil de Usuário Específico por ID
+@router.get("/{id_usuario}", response_model=UsuarioPerfilDetalhado)
+def obter_perfil_usuario(id_usuario: int, db: Session = Depends(get_db)):
+    from app.models.exchangeOffer import ExchangeOffer
+    from app.models.service_booking import ServiceBooking
+    from app.models.review import Review
+    from sqlalchemy import func
+    from sqlalchemy.orm import joinedload
+
+    usuario = db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Utilizador não encontrado")
+
+    # Contar trocas concluídas ou aceites
+    total_trocas = db.query(func.count(ExchangeOffer.id_offer)).filter(
+        ((ExchangeOffer.id_user == id_usuario) | 
+         (ExchangeOffer.id_usuario_solicitante == id_usuario)),
+        ExchangeOffer.status.in_(["aceita", "concluida"])
+    ).scalar() or 0
+
+    # Contar prestações concluídas
+    total_prestacoes = db.query(func.count(ServiceBooking.id_pedido)).filter(
+        ServiceBooking.id_prestador == id_usuario,
+        ServiceBooking.status == "concluido"
+    ).scalar() or 0
+
+    # Obter avaliações detalhadas
+    reviews = db.query(Review).options(joinedload(Review.avaliador)).filter(
+        Review.id_avaliado == id_usuario
+    ).all()
+
+    avaliacoes_list = []
+    for r in reviews:
+        avaliacoes_list.append({
+            "id_review": r.id_review,
+            "avaliacao": r.avaliacao,
+            "conteudo": r.conteudo,
+            "data_avaliacao": r.data_avaliacao,
+            "avaliador": {
+                "id_usuario": r.avaliador.id_usuario,
+                "nome": r.avaliador.nome,
+                "foto_perfil": r.avaliador.foto_perfil
+            }
+        })
+
+    user_dict = {
+        "id_usuario": usuario.id_usuario,
+        "nome": usuario.nome,
+        "endereco": usuario.endereco,
+        "email": usuario.email,
+        "foto_perfil": usuario.foto_perfil,
+        "rating_media": usuario.rating_media,
+        "is_dangerous": usuario.is_dangerous,
+        "mensagem_aviso": None,
+        "total_trocas": total_trocas,
+        "total_prestacoes": total_prestacoes,
+        "avaliacoes": avaliacoes_list
+    }
+
+    if usuario.nome == "Pendente de Validação":
+        user_dict["mensagem_aviso"] = "A API de verificação de NIF parou temporariamente. Foste cadastrado, mas tens de voltar mais tarde para validar o NIF e teres permissões nas trocas ou prestações de serviços."
+
+    return user_dict
+
 # 4. Perfil do Usuário Logado
 @router.get("/me", response_model=UsuarioPerfilDetalhado)
 def ver_perfil(current_user: Usuario = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -297,11 +361,11 @@ def ver_perfil(current_user: Usuario = Depends(get_current_user), db: Session = 
     from sqlalchemy import func
     from sqlalchemy.orm import joinedload
 
-    # Contar trocas concluídas
+    # Contar trocas concluídas ou aceites
     total_trocas = db.query(func.count(ExchangeOffer.id_offer)).filter(
         ((ExchangeOffer.id_user == current_user.id_usuario) | 
              (ExchangeOffer.id_usuario_solicitante == current_user.id_usuario)),
-        ExchangeOffer.status == "aceita"
+        ExchangeOffer.status.in_(["aceita", "concluida"])
     ).scalar() or 0
 
     # Contar prestações concluídas

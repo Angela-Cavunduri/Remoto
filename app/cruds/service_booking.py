@@ -42,11 +42,19 @@ def atualizar_status_pedido(db: Session, id_pedido: int, id_prestador: int, novo
         raise ValueError("Apenas o prestador pode aceitar ou recusar o pedido.")
     
     # Validação simples de status
+    status_lower = (novo_status or "").lower()
+    if status_lower in ["aceito", "aceitado", "aceite"]:
+        status_lower = "aceite"
+    elif status_lower in ["recusado", "recusada"]:
+        status_lower = "recusado"
+    elif status_lower in ["concluido", "concluida"]:
+        status_lower = "concluido"
+        
     status_validos = ["aceite", "recusado", "concluido"]
-    if novo_status not in status_validos:
+    if status_lower not in status_validos:
         raise ValueError("Status inválido.")
 
-    pedido.status = novo_status
+    pedido.status = status_lower
     db.commit()
     db.refresh(pedido)
     return pedido

@@ -1,7 +1,7 @@
 """add_freemium_fields_to_user
 
 Revision ID: fd1de3c01de3
-Revises: efcf6d765f5a
+Revises: 81ca78b362b0
 Create Date: 2026-05-17 13:11:26.299463
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'fd1de3c01de3'
-down_revision: Union[str, Sequence[str], None] = 'efcf6d765f5a'
+down_revision: Union[str, Sequence[str], None] = '81ca78b362b0'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
