@@ -1,7 +1,7 @@
 """alter collation for search fields
 
 Revision ID: 20230628_alter_collation
-Revises: f3e98805bfa4  # previous revision id (adjust if different)
+Revises: 20230618_01_apply_schema_changes_safe
 Create Date: 2026-06-28 15:30:00.000000
 """
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "20230628_alter_collation"
-down_revision = "f3e98805bfa4"
+down_revision = "20230618_01_apply_schema_changes_safe"
 branch_labels = None
 depends_on = None
 
